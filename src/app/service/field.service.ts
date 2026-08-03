@@ -33,6 +33,10 @@ export class FieldService {
     return this.storageService.watchFields(onChange);
   }
 
+  hasPendingWrites(): boolean {
+    return this.storageService.hasPendingWrites();
+  }
+
   private deserializeField(storedField: StoredField): Field | undefined {
     const crop = this.cropService.getCropById(storedField.cropId);
     if (!crop) return undefined;

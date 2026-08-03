@@ -51,6 +51,7 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
   }
 
   private async reloadFields() {
+    if (this.fieldService.hasPendingWrites()) return;
     this.fields.set(await this.fieldService.getFields());
   }
 }

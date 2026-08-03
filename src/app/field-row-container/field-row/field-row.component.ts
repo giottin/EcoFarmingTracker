@@ -1,4 +1,4 @@
-import {Component, computed, effect, input, output, signal, WritableSignal} from '@angular/core';
+import {Component, computed, input, output, signal, WritableSignal} from '@angular/core';
 import {Field} from '../../model/field';
 import {MatInputModule} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
@@ -8,7 +8,6 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {StorageService} from '../../service/storage.service';
-import {SettingsService} from '../../service/settings.service';
 import {Duration} from '../../model/duration';
 
 @Component({
@@ -44,22 +43,8 @@ export class FieldRowComponent {
 
   readonly cropOptions: WritableSignal<Crop[]> = signal([]);
 
-  constructor(cropService: CropService, private storageService: StorageService, private settingsService: SettingsService) {
+  constructor(cropService: CropService, private storageService: StorageService) {
     this.cropOptions.set(cropService.allCrops);
-
-    effect(() => {
-
-      //Read all these signals to detect changes for saving
-      const field = this.field();
-      field.name();
-      field.crop();
-      field.plantTime();
-      field.harvestTime();
-      field.selfRegenFullyGrown();
-      field.isPlanted();
-
-      this.storageService.saveField(field, this.sortOrder());
-    });
   }
 
   onCropChange(newCrop: Crop) {
@@ -67,10 +52,26 @@ export class FieldRowComponent {
     this.field().plantTime.set(undefined);
     this.field().harvestTime.set(undefined);
     this.field().isPlanted.set(false);
+    this.save();
   }
 
   onFieldNameChange(newFieldName: string) {
     this.field().name.set(newFieldName);
+    this.save();
+  }
+
+  onPlant() {
+    this.field().onPlant();
+    this.save();
+  }
+
+  onHarvest() {
+    this.field().onHarvest();
+    this.save();
+  }
+
+  private save() {
+    this.storageService.saveField(this.field(), this.sortOrder());
   }
 
   protected readonly close = close;

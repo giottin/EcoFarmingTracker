@@ -20,6 +20,10 @@ export class StorageService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
+  hasPendingWrites(): boolean {
+    return this.saveTimers.size > 0;
+  }
+
   async getGrowthTimeModifier(): Promise<number> {
     const {data, error} = await this.supabase.client
       .from('farming_settings')
@@ -73,7 +77,10 @@ export class StorageService {
       void this.supabase.client
         .from('farming_fields')
         .update(this.toRow(field, sortOrder))
-        .eq('id', field.id);
+        .eq('id', field.id)
+        .then(({error}) => {
+          if (error) console.error('Unable to save field', {fieldId: field.id, error});
+        });
     }, 300));
   }
 
@@ -86,7 +93,9 @@ export class StorageService {
   }
 
   watchFields(onChange: () => void) {
-    const timer = setInterval(onChange, 15000);
+    const timer = setInterval(() => {
+      if (!this.hasPendingWrites()) onChange();
+    }, 5000);
     return () => clearInterval(timer);
   }
 
