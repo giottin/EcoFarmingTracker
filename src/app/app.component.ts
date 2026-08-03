@@ -7,6 +7,7 @@ import {AccessState, AuthService} from './service/auth.service';
 import {SettingsService} from './service/settings.service';
 import {MatButtonModule} from '@angular/material/button';
 import {User} from '@supabase/supabase-js';
+import {AdminPanelComponent} from './admin-panel/admin-panel.component';
 
 @Component({
   selector: 'app-root',
@@ -15,7 +16,8 @@ import {User} from '@supabase/supabase-js';
     HeaderComponent,
     FieldRowContainerComponent,
     LoginComponent,
-    MatButtonModule
+    MatButtonModule,
+    AdminPanelComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

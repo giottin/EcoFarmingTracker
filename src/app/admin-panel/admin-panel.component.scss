@@ -1,0 +1,14 @@
+.admin-panel { width: min(100% - 2rem, 72rem); margin: 1rem auto 0; }
+.admin-toggle { display: flex; gap: 0.5rem; align-items: center; }
+.request-badge { min-width: 1.4rem; height: 1.4rem; padding: 0 0.4rem; display: inline-grid; place-items: center; border-radius: 999px; background: #ef5350; color: white; font-size: 0.75rem; }
+.admin-card { margin-top: 0.75rem; padding: 1.25rem; border: 1px solid rgba(128, 203, 196, 0.25); border-radius: 1rem; background: var(--mat-sys-surface-container-low); }
+.admin-heading, .request-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.admin-heading h2 { margin: 0; font-size: 1.2rem; }
+.admin-heading p, .empty-state, small { color: rgba(255, 255, 255, 0.65); }
+.admin-heading p { margin: 0.2rem 0 0; }
+.request-list { margin-top: 1rem; }
+.request-row { padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.request-row small { display: block; margin-top: 0.25rem; }
+.request-actions { display: flex; gap: 0.5rem; }
+.admin-error { color: #ff8a80; }
+@media (max-width: 650px) { .admin-heading, .request-row { align-items: stretch; flex-direction: column; } .request-actions button { flex: 1; } }
