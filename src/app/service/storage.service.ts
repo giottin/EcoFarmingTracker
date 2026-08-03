@@ -31,12 +31,11 @@ export class StorageService {
   }
 
   async saveGrowthTimeModifier(value: number) {
-    const {data: authData} = await this.supabase.client.auth.getUser();
     await this.supabase.client
       .from('farming_settings')
       .update({
         growth_time_modifier: value,
-        updated_by: authData.user?.id ?? null,
+        updated_by: null,
         updated_at: new Date().toISOString()
       })
       .eq('singleton', true);
@@ -87,20 +86,8 @@ export class StorageService {
   }
 
   watchFields(onChange: () => void) {
-    const channel = this.supabase.client
-      .channel('shared-farming-fields')
-      .on(
-        'postgres_changes',
-        {event: '*', schema: 'public', table: 'farming_fields'},
-        payload => {
-          const row = (payload.new && Object.keys(payload.new).length ? payload.new : payload.old) as {id?: number};
-          const id = Number(row?.id);
-          if (id && (this.localWriteUntil.get(id) ?? 0) > Date.now()) return;
-          onChange();
-        }
-      )
-      .subscribe();
-    return () => void this.supabase.client.removeChannel(channel);
+    const timer = setInterval(onChange, 15000);
+    return () => clearInterval(timer);
   }
 
   private toRow(field: Field, sortOrder: number) {

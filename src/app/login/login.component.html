@@ -2,27 +2,17 @@
   <section class="login-card">
     <div class="eyebrow">Espace privé Eco</div>
     <h1>Retrouvez vos outils partagés</h1>
-    <p>Connectez-vous avec votre adresse autorisée. Vous recevrez un lien sécurisé par email.</p>
+    <p>Entrez une adresse ajoutée par un administrateur pour accéder directement aux outils.</p>
 
-    @if (!sent()) {
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Adresse email</mat-label>
-        <input matInput type="email" [(ngModel)]="email" (keyup.enter)="sendLink()" autocomplete="email">
-      </mat-form-field>
-      <button mat-flat-button class="w-full" [disabled]="sending() || !email" (click)="sendLink()">
-        {{ sending() ? 'Envoi…' : 'Recevoir mon lien de connexion' }}
-      </button>
-      @if (error()) {
-        <p class="error-message">{{ error() }}</p>
-      }
-    } @else {
-      <div class="success-message">
-        <span class="material-icons">mark_email_read</span>
-        <div>
-          <strong>Email envoyé</strong>
-          <p>Ouvre le message reçu et clique sur le lien pour revenir ici.</p>
-        </div>
-      </div>
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Adresse email</mat-label>
+      <input matInput type="email" [(ngModel)]="email" (keyup.enter)="connect()" autocomplete="email">
+    </mat-form-field>
+    <button mat-flat-button class="w-full" [disabled]="connecting() || !email" (click)="connect()">
+      {{ connecting() ? 'Connexion…' : 'Accéder au site' }}
+    </button>
+    @if (error()) {
+      <p class="error-message">{{ error() }}</p>
     }
   </section>
 </main>

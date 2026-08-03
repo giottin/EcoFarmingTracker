@@ -6,7 +6,6 @@ import {LoginComponent} from './login/login.component';
 import {AccessState, AuthService} from './service/auth.service';
 import {SettingsService} from './service/settings.service';
 import {MatButtonModule} from '@angular/material/button';
-import {User} from '@supabase/supabase-js';
 import {AdminPanelComponent} from './admin-panel/admin-panel.component';
 
 @Component({
@@ -24,7 +23,6 @@ import {AdminPanelComponent} from './admin-panel/admin-panel.component';
 })
 export class AppComponent {
   readonly accessState: Signal<AccessState>;
-  readonly user: Signal<User | null>;
   private settingsLoaded = false;
 
   constructor(
@@ -32,7 +30,6 @@ export class AppComponent {
     private readonly settings: SettingsService
   ) {
     this.accessState = auth.accessState;
-    this.user = auth.user;
     effect(() => {
       if (this.accessState() === 'authorized' && !this.settingsLoaded) {
         this.settingsLoaded = true;

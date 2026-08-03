@@ -4,7 +4,7 @@
   <h1 class="mx-4 text-xl">Farming Tracker</h1>
   <div class="ml-auto flex items-center">
     <span class="material-icons cursor-pointer hover:opacity-80 mx-2" (click)="openSettingsDialog()">settings</span>
-    <span class="user-email">{{ auth.user()?.email }}</span>
+    <span class="user-email">{{ auth.email() }}</span>
     <button mat-stroked-button (click)="auth.signOut()">Déconnexion</button>
   </div>
 </header>

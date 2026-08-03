@@ -13,22 +13,17 @@ import {AuthService} from '../service/auth.service';
 })
 export class LoginComponent {
   email = '';
-  readonly sending = signal(false);
-  readonly sent = signal(false);
+  readonly connecting = signal(false);
   readonly error = signal('');
 
   constructor(private readonly auth: AuthService) {}
 
-  async sendLink() {
-    if (!this.email || this.sending()) return;
-    this.sending.set(true);
+  async connect() {
+    if (!this.email || this.connecting()) return;
+    this.connecting.set(true);
     this.error.set('');
-    const error = await this.auth.sendMagicLink(this.email.trim());
-    this.sending.set(false);
-    if (error) {
-      this.error.set('Impossible d’envoyer le lien. Vérifie l’adresse puis réessaie.');
-      return;
-    }
-    this.sent.set(true);
+    const authorized = await this.auth.signIn(this.email);
+    this.connecting.set(false);
+    if (!authorized) this.error.set('Cette adresse n’est pas autorisée.');
   }
 }

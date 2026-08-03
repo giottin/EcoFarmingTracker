@@ -6,9 +6,11 @@
 .admin-heading h2 { margin: 0; font-size: 1.2rem; }
 .admin-heading p, .empty-state, small { color: rgba(255, 255, 255, 0.65); }
 .admin-heading p { margin: 0.2rem 0 0; }
+.add-member { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; margin-top: 1.25rem; }
+.add-member mat-form-field { width: 100%; }
 .request-list { margin-top: 1rem; }
 .request-row { padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 .request-row small { display: block; margin-top: 0.25rem; }
 .request-actions { display: flex; gap: 0.5rem; }
 .admin-error { color: #ff8a80; }
-@media (max-width: 650px) { .admin-heading, .request-row { align-items: stretch; flex-direction: column; } .request-actions button { flex: 1; } }
+@media (max-width: 650px) { .admin-heading, .request-row { align-items: stretch; flex-direction: column; } .add-member { grid-template-columns: 1fr; } .request-actions button, .add-member button { width: 100%; } }

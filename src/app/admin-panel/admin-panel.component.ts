@@ -1,51 +1,38 @@
-import {DatePipe} from '@angular/common';
-import {Component, OnDestroy, OnInit, signal} from '@angular/core';
+import {Component, OnInit, signal} from '@angular/core';
+import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
-import {RealtimeChannel} from '@supabase/supabase-js';
-import {AccessRequest, AdminAccessService} from '../service/admin-access.service';
-import {SupabaseService} from '../service/supabase.service';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {AdminAccessService, AllowedEmail} from '../service/admin-access.service';
 
 @Component({
   selector: 'app-admin-panel',
-  imports: [DatePipe, MatButtonModule],
+  imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.scss'
 })
-export class AdminPanelComponent implements OnInit, OnDestroy {
+export class AdminPanelComponent implements OnInit {
   readonly open = signal(false);
   readonly processing = signal<string | null>(null);
-  private channel?: RealtimeChannel;
-
-  constructor(
-    readonly access: AdminAccessService,
-    private readonly supabase: SupabaseService
-  ) {}
+  email = '';
+  constructor(readonly access: AdminAccessService) {}
 
   ngOnInit() {
     void this.access.load();
-    this.channel = this.supabase.client
-      .channel('admin-access-requests')
-      .on('postgres_changes', {event: '*', schema: 'public', table: 'access_requests'}, () => void this.access.load())
-      .subscribe();
   }
 
-  ngOnDestroy() {
-    if (this.channel) void this.supabase.client.removeChannel(this.channel);
-  }
+  toggle() { this.open.update(value => !value); }
 
-  toggle() {
-    this.open.update(value => !value);
-  }
-
-  async approve(request: AccessRequest) {
-    this.processing.set(request.user_id);
-    await this.access.approve(request);
+  async add() {
+    if (!this.email.trim() || this.processing()) return;
+    this.processing.set('add');
+    if (await this.access.add(this.email)) this.email = '';
     this.processing.set(null);
   }
 
-  async reject(request: AccessRequest) {
-    this.processing.set(request.user_id);
-    await this.access.reject(request);
+  async remove(member: AllowedEmail) {
+    this.processing.set(member.email);
+    await this.access.remove(member);
     this.processing.set(null);
   }
 }

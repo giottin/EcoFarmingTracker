@@ -1,15 +1,15 @@
 import {Injectable, signal} from '@angular/core';
 import {SupabaseService} from './supabase.service';
 
-export interface AccessRequest {
-  user_id: string;
+export interface AllowedEmail {
   email: string;
+  role: 'admin' | 'member';
   created_at: string;
 }
 
 @Injectable({providedIn: 'root'})
 export class AdminAccessService {
-  readonly requests = signal<AccessRequest[]>([]);
+  readonly members = signal<AllowedEmail[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
@@ -19,54 +19,42 @@ export class AdminAccessService {
     this.loading.set(true);
     this.error.set(null);
     const {data, error} = await this.supabase.client
-      .from('access_requests')
-      .select('user_id, email, created_at')
-      .eq('status', 'pending')
+      .from('allowed_emails')
+      .select('email, role, created_at')
       .order('created_at', {ascending: true});
-
     this.loading.set(false);
     if (error) {
-      this.error.set('Impossible de charger les demandes.');
+      this.error.set('Impossible de charger les adresses autorisées.');
       return;
     }
-    this.requests.set(data ?? []);
+    this.members.set(data ?? []);
   }
 
-  async approve(request: AccessRequest): Promise<boolean> {
+  async add(email: string): Promise<boolean> {
     this.error.set(null);
-    const {error} = await this.supabase.client.from('workspace_members').insert({
-      user_id: request.user_id,
-      display_name: request.email.split('@')[0],
+    const normalizedEmail = email.trim().toLowerCase();
+    const {error} = await this.supabase.client.from('allowed_emails').insert({
+      email: normalizedEmail,
       role: 'member'
     });
-    if (error && error.code !== '23505') {
-      this.error.set('Impossible d’autoriser cette adresse.');
+    if (error) {
+      this.error.set(error.code === '23505' ? 'Cette adresse est déjà autorisée.' : 'Impossible d’ajouter cette adresse.');
       return false;
     }
-
-    const {error: deleteError} = await this.supabase.client
-      .from('access_requests')
-      .delete()
-      .eq('user_id', request.user_id);
-    if (deleteError) {
-      this.error.set('L’adresse est autorisée, mais la demande n’a pas pu être retirée.');
-      return false;
-    }
-    this.requests.update(items => items.filter(item => item.user_id !== request.user_id));
+    await this.load();
     return true;
   }
 
-  async reject(request: AccessRequest): Promise<boolean> {
+  async remove(member: AllowedEmail): Promise<boolean> {
     this.error.set(null);
-    const {error} = await this.supabase.client
-      .from('access_requests')
-      .update({status: 'rejected', updated_at: new Date().toISOString()})
-      .eq('user_id', request.user_id);
+    const {error} = await this.supabase.client.rpc('remove_allowed_email', {
+      requested_email: member.email
+    });
     if (error) {
-      this.error.set('Impossible de refuser cette adresse.');
+      this.error.set('Impossible de supprimer cette adresse.');
       return false;
     }
-    this.requests.update(items => items.filter(item => item.user_id !== request.user_id));
+    this.members.update(items => items.filter(item => item.email !== member.email));
     return true;
   }
 }

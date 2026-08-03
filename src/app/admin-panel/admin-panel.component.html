@@ -2,36 +2,42 @@
   <button mat-stroked-button class="admin-toggle" (click)="toggle()">
     <span class="material-icons">admin_panel_settings</span>
     Administration
-    @if (access.requests().length > 0) {
-      <span class="request-badge">{{ access.requests().length }}</span>
-    }
   </button>
 
   @if (open()) {
     <div class="admin-card">
       <div class="admin-heading">
         <div>
-          <h2>Demandes d’accès</h2>
-          <p>Autorise uniquement les adresses que tu reconnais.</p>
+          <h2>Adresses autorisées</h2>
+          <p>Ajoute ou retire directement les personnes qui peuvent accéder au site.</p>
         </div>
         <button mat-button (click)="access.load()">Actualiser</button>
       </div>
 
+      <div class="add-member">
+        <mat-form-field appearance="outline">
+          <mat-label>Nouvelle adresse email</mat-label>
+          <input matInput type="email" [(ngModel)]="email" (keyup.enter)="add()" autocomplete="off">
+        </mat-form-field>
+        <button mat-flat-button [disabled]="processing() === 'add' || !email.trim()" (click)="add()">
+          {{ processing() === 'add' ? 'Ajout…' : 'Ajouter' }}
+        </button>
+      </div>
+
       @if (access.loading()) {
         <p class="empty-state">Chargement…</p>
-      } @else if (access.requests().length === 0) {
-        <p class="empty-state">Aucune demande en attente.</p>
       } @else {
         <div class="request-list">
-          @for (request of access.requests(); track request.user_id) {
+          @for (member of access.members(); track member.email) {
             <div class="request-row">
               <div>
-                <strong>{{ request.email }}</strong>
-                <small>Demande reçue le {{ request.created_at | date:'dd/MM/yyyy à HH:mm' }}</small>
+                <strong>{{ member.email }}</strong>
+                <small>{{ member.role === 'admin' ? 'Administrateur' : 'Membre' }}</small>
               </div>
               <div class="request-actions">
-                <button mat-flat-button [disabled]="processing() === request.user_id" (click)="approve(request)">Autoriser</button>
-                <button mat-stroked-button [disabled]="processing() === request.user_id" (click)="reject(request)">Refuser</button>
+                <button mat-stroked-button [disabled]="member.role === 'admin' || processing() === member.email" (click)="remove(member)">
+                  Supprimer
+                </button>
               </div>
             </div>
           }

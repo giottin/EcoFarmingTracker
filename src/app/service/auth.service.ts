@@ -1,12 +1,13 @@
 import {Injectable, signal} from '@angular/core';
-import {User} from '@supabase/supabase-js';
 import {SupabaseService} from './supabase.service';
 
-export type AccessState = 'loading' | 'signed-out' | 'pending' | 'rejected' | 'authorized';
+export type AccessState = 'loading' | 'signed-out' | 'authorized';
+
+type WorkspaceAccess = {email: string; role: 'admin' | 'member'};
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
-  readonly user = signal<User | null>(null);
+  readonly email = signal<string | null>(null);
   readonly accessState = signal<AccessState>('loading');
   readonly isAdmin = signal(false);
 
@@ -15,83 +16,44 @@ export class AuthService {
   }
 
   private async initialize() {
-    const {data} = await this.supabase.client.auth.getSession();
-    await this.applyUser(data.session?.user ?? null);
-
-    this.supabase.client.auth.onAuthStateChange((_event, session) => {
-      setTimeout(() => void this.applyUser(session?.user ?? null), 0);
-    });
-  }
-
-  private async applyUser(user: User | null) {
-    this.user.set(user);
-    if (!user) {
-      this.isAdmin.set(false);
+    if (!this.supabase.token) {
       this.accessState.set('signed-out');
       return;
     }
 
-    this.accessState.set('loading');
-    const {data, error} = await this.supabase.client
-      .from('workspace_members')
-      .select('user_id, role')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Unable to verify workspace access', error);
-      await this.supabase.client.auth.signOut({scope: 'local'});
-      this.user.set(null);
-      this.isAdmin.set(false);
+    const {data, error} = await this.supabase.client.rpc('current_workspace_access');
+    const access = data?.[0] as WorkspaceAccess | undefined;
+    if (error || !access) {
+      this.supabase.setToken(null);
       this.accessState.set('signed-out');
       return;
     }
-
-    if (data) {
-      this.isAdmin.set(data.role === 'admin');
-      this.accessState.set('authorized');
-      return;
-    }
-
-    this.isAdmin.set(false);
-    const request = await this.getOrCreateAccessRequest(user);
-    this.accessState.set(request === 'rejected' ? 'rejected' : 'pending');
+    this.applyAccess(access);
   }
 
-  private async getOrCreateAccessRequest(user: User): Promise<'pending' | 'rejected'> {
-    const existing = await this.supabase.client
-      .from('access_requests')
-      .select('status')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (existing.data?.status === 'rejected') return 'rejected';
-    if (existing.data) return 'pending';
-
-    await this.supabase.client.from('access_requests').insert({
-      user_id: user.id,
-      email: user.email ?? '',
-      status: 'pending'
+  async signIn(email: string): Promise<boolean> {
+    const {data, error} = await this.supabase.client.rpc('enter_workspace', {
+      requested_email: email.trim().toLowerCase()
     });
-    return 'pending';
-  }
+    const access = data?.[0] as (WorkspaceAccess & {session_token: string}) | undefined;
+    if (error || !access) return false;
 
-  async sendMagicLink(email: string): Promise<string | null> {
-    const {error} = await this.supabase.client.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-        shouldCreateUser: true
-      }
-    });
-    return error?.message ?? null;
-  }
-
-  async refreshAccess() {
-    await this.applyUser(this.user());
+    this.supabase.setToken(access.session_token);
+    this.applyAccess(access);
+    return true;
   }
 
   async signOut() {
-    await this.supabase.client.auth.signOut();
+    if (this.supabase.token) await this.supabase.client.rpc('leave_workspace');
+    this.supabase.setToken(null);
+    this.email.set(null);
+    this.isAdmin.set(false);
+    this.accessState.set('signed-out');
+  }
+
+  private applyAccess(access: WorkspaceAccess) {
+    this.email.set(access.email);
+    this.isAdmin.set(access.role === 'admin');
+    this.accessState.set('authorized');
   }
 }
