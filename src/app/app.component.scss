@@ -30,3 +30,36 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.tool-navigation {
+  display: flex;
+  gap: 0.35rem;
+  width: min(100% - 2rem, 72rem);
+  margin: 1rem auto 0;
+  padding: 0.3rem;
+  border: 1px solid rgba(128, 203, 196, 0.18);
+  border-radius: 0.9rem;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.tool-navigation button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0.65rem;
+  color: rgba(255, 255, 255, 0.62);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tool-navigation button.active { color: #071213; background: #80cbc4; font-weight: 700; }
+.tool-navigation .material-icons { font-size: 1.25rem; }
+
+@media (max-width: 560px) {
+  .tool-navigation { width: calc(100% - 1rem); margin-top: 0.5rem; }
+  .tool-navigation button { padding-inline: 0.4rem; font-size: 0.78rem; }
+}

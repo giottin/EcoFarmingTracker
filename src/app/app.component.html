@@ -5,11 +5,25 @@
   @case ('authorized') {
     <div class="flex flex-col min-h-screen">
       <app-header></app-header>
+      <nav class="tool-navigation" aria-label="Outils Eco">
+        <button type="button" [class.active]="activeTool() === 'fields'" (click)="selectTool('fields')">
+          <span class="material-icons">grass</span>
+          Suivi des champs
+        </button>
+        <button type="button" [class.active]="activeTool() === 'fertilizer'" (click)="selectTool('fertilizer')">
+          <span class="material-icons">science</span>
+          Calculateur d’engrais
+        </button>
+      </nav>
       <main class="flex-1">
         @if (auth.isAdmin()) {
           <app-admin-panel></app-admin-panel>
         }
-        <app-field-row-container></app-field-row-container>
+        @if (activeTool() === 'fields') {
+          <app-field-row-container></app-field-row-container>
+        } @else {
+          <app-fertilizer-calculator></app-fertilizer-calculator>
+        }
       </main>
       <app-footer></app-footer>
     </div>

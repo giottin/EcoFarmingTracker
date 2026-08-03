@@ -1,4 +1,4 @@
-import {Component, effect, Signal} from '@angular/core';
+import {Component, effect, signal, Signal} from '@angular/core';
 import {FooterComponent} from './footer/footer.component';
 import {HeaderComponent} from './header/header.component';
 import {FieldRowContainerComponent} from './field-row-container/field-row-container.component';
@@ -7,6 +7,9 @@ import {AccessState, AuthService} from './service/auth.service';
 import {SettingsService} from './service/settings.service';
 import {MatButtonModule} from '@angular/material/button';
 import {AdminPanelComponent} from './admin-panel/admin-panel.component';
+import {FertilizerCalculatorComponent} from './fertilizer-calculator/fertilizer-calculator.component';
+
+type Tool = 'fields' | 'fertilizer';
 
 @Component({
   selector: 'app-root',
@@ -16,13 +19,15 @@ import {AdminPanelComponent} from './admin-panel/admin-panel.component';
     FieldRowContainerComponent,
     LoginComponent,
     MatButtonModule,
-    AdminPanelComponent
+    AdminPanelComponent,
+    FertilizerCalculatorComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   readonly accessState: Signal<AccessState>;
+  readonly activeTool = signal<Tool>('fields');
   private settingsLoaded = false;
 
   constructor(
@@ -36,5 +41,9 @@ export class AppComponent {
         void this.settings.load();
       }
     });
+  }
+
+  selectTool(tool: Tool) {
+    this.activeTool.set(tool);
   }
 }

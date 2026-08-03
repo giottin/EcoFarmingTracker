@@ -1,0 +1,73 @@
+<section class="calculator-shell">
+  <div class="calculator-heading">
+    <div>
+      <span class="eyebrow">OUTIL DE SIMULATION</span>
+      <h2>Calculateur d’engrais</h2>
+      <p>Indique l’état actuel du sol, puis ajuste les engrais pour voir immédiatement le résultat.</p>
+    </div>
+    <button type="button" class="reset-button" (click)="reset()">
+      <span class="material-icons">restart_alt</span>
+      Réinitialiser
+    </button>
+  </div>
+
+  <div class="soil-grid">
+    <label class="soil-input nitrogen">
+      <span>Azote actuel</span>
+      <div><input type="number" min="0" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="updateInputs()"><b>%</b></div>
+    </label>
+    <label class="soil-input phosphorus">
+      <span>Phosphore actuel</span>
+      <div><input type="number" min="0" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="updateInputs()"><b>%</b></div>
+    </label>
+    <label class="soil-input potassium">
+      <span>Potassium actuel</span>
+      <div><input type="number" min="0" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="updateInputs()"><b>%</b></div>
+    </label>
+    <label class="soil-input claims">
+      <span>Nombre de claims</span>
+      <div><input type="number" min="1" step="1" [(ngModel)]="claims" (ngModelChange)="updateInputs()"></div>
+    </label>
+  </div>
+
+  <div class="result-card">
+    <div class="result-title">
+      <span>Résultat après application</span>
+      <small>Écart entre les nutriments : {{ format(balanceGap) }} points</small>
+    </div>
+    <div class="result-grid">
+      <div><span>Azote</span><strong>{{ format(after.nitrogen) }}%</strong><small>+ {{ format(increase.nitrogen) }}</small></div>
+      <div><span>Phosphore</span><strong>{{ format(after.phosphorus) }}%</strong><small>+ {{ format(increase.phosphorus) }}</small></div>
+      <div><span>Potassium</span><strong>{{ format(after.potassium) }}%</strong><small>+ {{ format(increase.potassium) }}</small></div>
+    </div>
+  </div>
+
+  <div class="fertilizer-section">
+    <div class="section-title">
+      <div><h3>Plan d’engraissement</h3><p>Les quantités sont indiquées par claim.</p></div>
+      <div class="total-pill"><strong>{{ totalItems }}</strong><span>engrais au total</span></div>
+    </div>
+
+    <div class="fertilizer-list">
+      @for (fertilizer of fertilizers; track fertilizer.name) {
+        <article class="fertilizer-row">
+          <div class="fertilizer-name">
+            <strong>{{ fertilizer.name }}</strong>
+            <small>N {{ fertilizer.nitrogen }} · P {{ fertilizer.phosphorus }} · K {{ fertilizer.potassium }}</small>
+          </div>
+          <div class="contributions" aria-label="Augmentation obtenue">
+            <span>N +{{ format(contribution(fertilizer, 'nitrogen')) }}</span>
+            <span>P +{{ format(contribution(fertilizer, 'phosphorus')) }}</span>
+            <span>K +{{ format(contribution(fertilizer, 'potassium')) }}</span>
+          </div>
+          <div class="stepper">
+            <button type="button" (click)="changeQuantity(fertilizer, -1)" [disabled]="fertilizer.quantity === 0" [attr.aria-label]="'Retirer ' + fertilizer.name">−</button>
+            <input type="number" min="0" step="1" [ngModel]="fertilizer.quantity" (ngModelChange)="setQuantity(fertilizer, $event)" [attr.aria-label]="'Quantité de ' + fertilizer.name">
+            <button type="button" (click)="changeQuantity(fertilizer, 1)" [attr.aria-label]="'Ajouter ' + fertilizer.name">+</button>
+          </div>
+          <div class="row-total"><strong>{{ fertilizer.quantity * claims }}</strong><small>au total</small></div>
+        </article>
+      }
+    </div>
+  </div>
+</section>
