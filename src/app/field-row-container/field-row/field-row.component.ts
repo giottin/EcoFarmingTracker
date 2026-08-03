@@ -1,4 +1,4 @@
-import {Component, computed, effect, input, OnInit, output, signal, WritableSignal} from '@angular/core';
+import {Component, computed, effect, input, output, signal, WritableSignal} from '@angular/core';
 import {Field} from '../../model/field';
 import {MatInputModule} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
@@ -17,8 +17,9 @@ import {Duration} from '../../model/duration';
   templateUrl: './field-row.component.html',
   styleUrl: './field-row.component.scss'
 })
-export class FieldRowComponent implements OnInit {
+export class FieldRowComponent {
   field = input.required<Field>();
+  sortOrder = input.required<number>();
   rowClosed = output<Field>();
 
   readonly fieldPlaceholder = computed(() => `${this.field().crop().name().split(' ')[0]} Field`);
@@ -57,11 +58,8 @@ export class FieldRowComponent implements OnInit {
       field.selfRegenFullyGrown();
       field.isPlanted();
 
-      this.storageService.saveField(field);
+      this.storageService.saveField(field, this.sortOrder());
     });
-  }
-
-  ngOnInit(): void {
   }
 
   onCropChange(newCrop: Crop) {

@@ -1,48 +1,47 @@
-import {effect, Injectable, signal, WritableSignal} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {CropService} from './crop.service';
 import {Field, StoredField} from '../model/field';
 import {StorageService} from './storage.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({providedIn: 'root'})
 export class FieldService {
+  constructor(
+    private readonly cropService: CropService,
+    private readonly storageService: StorageService
+  ) {}
 
-  private readonly id: WritableSignal<number>;
-
-  constructor(private cropService: CropService, private storageService: StorageService) {
-    this.id = signal(storageService.getId());
-
-    effect(() => storageService.saveId(this.id()))
-  }
-
-  getRandomField() {
-    const field = new Field(this.id(), this.cropService.getRandomCrop());
-    this.id.update(id => id + 1);
+  async createRandomField(sortOrder: number): Promise<Field | null> {
+    const field = new Field(0, this.cropService.getRandomCrop());
+    const id = await this.storageService.createField(field, sortOrder);
+    if (id === null) return null;
+    field.id = id;
     return field;
   }
 
-  getFields(): Field[] {
-    return this.storageService.getStoredFields()
+  async getFields(): Promise<Field[]> {
+    const storedFields = await this.storageService.getStoredFields();
+    return storedFields
       .map(storedField => this.deserializeField(storedField))
-      .filter(field => field !== undefined)
+      .filter((field): field is Field => field !== undefined);
   }
 
-  deserializeField(storedField: StoredField): Field | undefined {
+  async deleteField(id: number) {
+    await this.storageService.deleteField(id);
+  }
+
+  watchFields(onChange: () => void) {
+    return this.storageService.watchFields(onChange);
+  }
+
+  private deserializeField(storedField: StoredField): Field | undefined {
     const crop = this.cropService.getCropById(storedField.cropId);
-    if (!crop) {
-      console.warn(`Could not find crop with id ${storedField.cropId}`);
-      return undefined;
-    }
+    if (!crop) return undefined;
     const field = new Field(storedField.id, crop);
     field.name.set(storedField.name);
     field.plantTime.set(storedField.plantTime);
     field.harvestTime.set(storedField.harvestTime);
     field.selfRegenFullyGrown.set(storedField.selfRegenFullyGrown);
     field.isPlanted.set(storedField.isPlanted);
-
     return field;
   }
 }
-
-

@@ -1,0 +1,32 @@
+.access-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: radial-gradient(circle at top, rgba(38, 166, 154, 0.16), transparent 40%), #071213;
+}
+
+.access-card {
+  width: min(100%, 34rem);
+  padding: 2.5rem;
+  text-align: center;
+  border: 1px solid rgba(128, 203, 196, 0.22);
+  border-radius: 1.5rem;
+  background: rgba(16, 35, 36, 0.92);
+}
+
+.access-card > .material-icons { color: #80cbc4; font-size: 3rem; }
+.access-card h1 { margin: 0.75rem 0; font-size: 2rem; }
+.access-card p { color: rgba(255, 255, 255, 0.7); line-height: 1.6; }
+.access-actions { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+.loading-orb {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 3px solid rgba(128, 203, 196, 0.2);
+  border-top-color: #80cbc4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

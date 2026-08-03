@@ -1,7 +1,31 @@
-<div class="flex flex-col min-h-screen">
-  <app-header></app-header>
-  <main class="flex-1">
-    <app-field-row-container></app-field-row-container>
-  </main>
-  <app-footer></app-footer>
-</div>
+@switch (accessState()) {
+  @case ('signed-out') {
+    <app-login></app-login>
+  }
+  @case ('pending') {
+    <main class="access-shell">
+      <section class="access-card">
+        <span class="material-icons">lock_clock</span>
+        <h1>Accès en attente</h1>
+        <p>Ton compte <strong>{{ user()?.email }}</strong> est connecté, mais il n’a pas encore été ajouté au groupe privé.</p>
+        <p>Demande à Giottin d’autoriser cette adresse, puis actualise l’accès.</p>
+        <div class="access-actions">
+          <button mat-flat-button (click)="auth.refreshAccess()">Actualiser l’accès</button>
+          <button mat-stroked-button (click)="auth.signOut()">Changer de compte</button>
+        </div>
+      </section>
+    </main>
+  }
+  @case ('authorized') {
+    <div class="flex flex-col min-h-screen">
+      <app-header></app-header>
+      <main class="flex-1">
+        <app-field-row-container></app-field-row-container>
+      </main>
+      <app-footer></app-footer>
+    </div>
+  }
+  @default {
+    <main class="access-shell"><div class="loading-orb" aria-label="Chargement"></div></main>
+  }
+}

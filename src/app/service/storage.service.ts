@@ -1,82 +1,131 @@
 import {Injectable} from '@angular/core';
 import {Field, StoredField} from '../model/field';
+import {SupabaseService} from './supabase.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+type FieldRow = {
+  id: number;
+  name: string;
+  crop_id: string;
+  plant_time: string | null;
+  harvest_time: string | null;
+  self_regen_fully_grown: boolean;
+  is_planted: boolean;
+  sort_order: number;
+};
+
+@Injectable({providedIn: 'root'})
 export class StorageService {
+  private readonly saveTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  private readonly localWriteUntil = new Map<number, number>();
 
-  constructor() {
+  constructor(private readonly supabase: SupabaseService) {}
+
+  async getGrowthTimeModifier(): Promise<number> {
+    const {data, error} = await this.supabase.client
+      .from('farming_settings')
+      .select('growth_time_modifier')
+      .eq('singleton', true)
+      .single();
+    if (error || !data) return 1;
+    return Number(data.growth_time_modifier) || 1;
   }
 
-  saveGrowthTimeModifier(value: number) {
-    localStorage.setItem('growthTimeModifier', value.toString());
+  async saveGrowthTimeModifier(value: number) {
+    const {data: authData} = await this.supabase.client.auth.getUser();
+    await this.supabase.client
+      .from('farming_settings')
+      .update({
+        growth_time_modifier: value,
+        updated_by: authData.user?.id ?? null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('singleton', true);
   }
 
-  getGrowthTimeModifier(): number {
-    const storedValue = localStorage.getItem('growthTimeModifier');
-
-    if (storedValue) {
-      try {
-        return parseFloat(storedValue);
-      } catch (error) {
-        console.warn(error);
-      }
-    }
-
-    return 1.0;
+  async getStoredFields(): Promise<StoredField[]> {
+    const {data, error} = await this.supabase.client
+      .from('farming_fields')
+      .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, sort_order')
+      .order('sort_order', {ascending: true})
+      .order('id', {ascending: true});
+    if (error || !data) return [];
+    return (data as FieldRow[]).map(row => this.toStoredField(row));
   }
 
-  saveId(id: number) {
-    localStorage.setItem('nextFieldId', id.toString());
+  async createField(field: Field, sortOrder: number): Promise<number | null> {
+    const payload = this.toRow(field, sortOrder);
+    const {data, error} = await this.supabase.client
+      .from('farming_fields')
+      .insert(payload)
+      .select('id')
+      .single();
+    if (error || !data) return null;
+    const id = Number(data.id);
+    this.localWriteUntil.set(id, Date.now() + 1500);
+    return id;
   }
 
-  getId(): number {
-    const idStr = localStorage.getItem('nextFieldId');
-    if (!idStr) {
-      return 0;
-    }
-    const id = parseInt(idStr);
-    return isNaN(id) ? 0 : id;
+  saveField(field: Field, sortOrder = 0) {
+    const existingTimer = this.saveTimers.get(field.id);
+    if (existingTimer) clearTimeout(existingTimer);
+    this.saveTimers.set(field.id, setTimeout(() => {
+      this.saveTimers.delete(field.id);
+      this.localWriteUntil.set(field.id, Date.now() + 1500);
+      void this.supabase.client
+        .from('farming_fields')
+        .update(this.toRow(field, sortOrder))
+        .eq('id', field.id);
+    }, 300));
   }
 
-  saveFields(fields: Field[]) {
-    const storedFields = fields.map(field => field.serialize());
-    localStorage.setItem('fields', JSON.stringify(storedFields));
+  async deleteField(id: number) {
+    const timer = this.saveTimers.get(id);
+    if (timer) clearTimeout(timer);
+    this.saveTimers.delete(id);
+    this.localWriteUntil.set(id, Date.now() + 1500);
+    await this.supabase.client.from('farming_fields').delete().eq('id', id);
   }
 
-  saveField(field: Field) {
-    const storedFields = this.getStoredFields();
-
-    const existingFieldIndex = storedFields.findIndex(storedField => storedField.id === field.id);
-    const serializedField = field.serialize();
-    if (existingFieldIndex !== -1) {
-      storedFields[existingFieldIndex] = serializedField;
-    } else {
-      storedFields.push(serializedField);
-    }
-
-    localStorage.setItem('fields', JSON.stringify(storedFields));
-  }
-
-  getStoredFields(): StoredField[] {
-    const jsonStr = localStorage.getItem('fields');
-    if (!jsonStr) {
-      return [];
-    }
-
-    try {
-      const parsedFields = JSON.parse(jsonStr);
-      return parsedFields.map((field: StoredField) => {
-        return {
-          ...field,
-          plantTime: field.plantTime ? new Date(field.plantTime as unknown as string) : undefined,
-          harvestTime: field.harvestTime ? new Date(field.harvestTime as unknown as string) : undefined,
+  watchFields(onChange: () => void) {
+    const channel = this.supabase.client
+      .channel('shared-farming-fields')
+      .on(
+        'postgres_changes',
+        {event: '*', schema: 'public', table: 'farming_fields'},
+        payload => {
+          const row = (payload.new && Object.keys(payload.new).length ? payload.new : payload.old) as {id?: number};
+          const id = Number(row?.id);
+          if (id && (this.localWriteUntil.get(id) ?? 0) > Date.now()) return;
+          onChange();
         }
-      });
-    } catch (error) {
-      console.warn(error);
-      return [];
-    }
+      )
+      .subscribe();
+    return () => void this.supabase.client.removeChannel(channel);
+  }
+
+  private toRow(field: Field, sortOrder: number) {
+    const stored = field.serialize();
+    return {
+      name: stored.name,
+      crop_id: stored.cropId,
+      plant_time: stored.plantTime?.toISOString() ?? null,
+      harvest_time: stored.harvestTime?.toISOString() ?? null,
+      self_regen_fully_grown: stored.selfRegenFullyGrown,
+      is_planted: stored.isPlanted,
+      sort_order: sortOrder,
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  private toStoredField(row: FieldRow): StoredField {
+    return {
+      id: row.id,
+      name: row.name,
+      cropId: row.crop_id,
+      plantTime: row.plant_time ? new Date(row.plant_time) : undefined,
+      harvestTime: row.harvest_time ? new Date(row.harvest_time) : undefined,
+      selfRegenFullyGrown: row.self_regen_fully_grown,
+      isPlanted: row.is_planted
+    };
   }
 }

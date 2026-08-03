@@ -1,10 +1,9 @@
-import {Component, effect, signal, WritableSignal} from '@angular/core';
+import {Component, OnDestroy, OnInit, signal} from '@angular/core';
 import {Field} from '../model/field';
 import {FieldService} from '../service/field.service';
 import {FieldRowComponent} from './field-row/field-row.component';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
-import {StorageService} from '../service/storage.service';
 
 @Component({
   selector: 'app-field-row-container',
@@ -16,31 +15,39 @@ import {StorageService} from '../service/storage.service';
   templateUrl: './field-row-container.component.html',
   styleUrl: './field-row-container.component.scss'
 })
-export class FieldRowContainerComponent {
-  fields: WritableSignal<Field[]>;
+export class FieldRowContainerComponent implements OnInit, OnDestroy {
+  readonly fields = signal<Field[]>([]);
+  readonly loading = signal(true);
+  readonly adding = signal(false);
+  private stopWatching?: () => void;
 
-  constructor(private fieldService: FieldService, private storageService: StorageService) {
-    this.fields = signal(fieldService.getFields());
+  constructor(private readonly fieldService: FieldService) {}
 
-    if (this.fields().length === 0) {
-      this.addRandomField();
-    }
-
-    effect(() => {
-      const fields = this.fields();
-      if (fields) {
-        this.storageService.saveFields(fields);
-      }
-    });
-
+  async ngOnInit() {
+    this.fields.set(await this.fieldService.getFields());
+    if (this.fields().length === 0) await this.addRandomField();
+    this.stopWatching = this.fieldService.watchFields(() => void this.reloadFields());
+    this.loading.set(false);
   }
 
-  addRandomField() {
-    const randomField = this.fieldService.getRandomField();
-    this.fields().push(randomField);
+  ngOnDestroy() {
+    this.stopWatching?.();
   }
 
-  onRowClosed(field: Field) {
+  async addRandomField() {
+    if (this.adding()) return;
+    this.adding.set(true);
+    const randomField = await this.fieldService.createRandomField(this.fields().length);
+    if (randomField) this.fields.update(fields => [...fields, randomField]);
+    this.adding.set(false);
+  }
+
+  async onRowClosed(field: Field) {
     this.fields.update(fields => fields.filter(f => f !== field));
+    await this.fieldService.deleteField(field.id);
+  }
+
+  private async reloadFields() {
+    this.fields.set(await this.fieldService.getFields());
   }
 }

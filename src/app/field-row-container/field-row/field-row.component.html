@@ -26,13 +26,13 @@
              class="cursor-not-allowed">
     </mat-form-field>
     <div class="mx-4 w-40 flex flex-col items-center">
-      <button mat-stroked-button class="w-28 mb-2" (click)="field().onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
+      <button type="button" mat-stroked-button class="w-28 mb-2" (click)="field().onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
       @if (field().plantTime()) {
         <span>{{ displayedPlantTime() }}</span>
       }
     </div>
     <div class="mx-4 w-40 flex flex-col items-center">
-      <button mat-stroked-button class="w-28 mb-2" (click)="field().onHarvest()">Harvest</button>
+      <button type="button" mat-stroked-button class="w-28 mb-2" (click)="field().onHarvest()">Harvest</button>
       @if (field().harvestTime()) {
         <span>{{ displayedHarvestTime() }}</span>
       }

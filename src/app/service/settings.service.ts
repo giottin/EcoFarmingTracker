@@ -1,26 +1,20 @@
-import {effect, Injectable, signal, WritableSignal} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {StorageService} from './storage.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({providedIn: 'root'})
 export class SettingsService {
+  private readonly _growthTimeModifier = signal(1);
+  readonly growthTimeModifier = this._growthTimeModifier.asReadonly();
 
-  private readonly _growthTimeModifier: WritableSignal<number>;
+  constructor(private readonly storageService: StorageService) {}
 
-  constructor(storageService: StorageService) {
-
-    this._growthTimeModifier = signal(storageService.getGrowthTimeModifier());
-
-    effect(() => storageService.saveGrowthTimeModifier(this._growthTimeModifier()));
-  }
-
-  get growthTimeModifier() {
-    return this._growthTimeModifier.asReadonly();
+  async load() {
+    this._growthTimeModifier.set(await this.storageService.getGrowthTimeModifier());
   }
 
   updateGrowthTimeModifier(value: number) {
-    this._growthTimeModifier.set(value);
+    const safeValue = Math.min(100, Math.max(0.1, Number(value) || 1));
+    this._growthTimeModifier.set(safeValue);
+    void this.storageService.saveGrowthTimeModifier(safeValue);
   }
-
 }

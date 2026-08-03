@@ -1,11 +1,17 @@
 <div class="flex flex-col items-center pt-2">
-  @for (field of fields(); track field.id) {
-    <app-field-row [field]="field" (rowClosed)="onRowClosed(field)" class="w-full my-1">
+  @if (loading()) {
+    <div class="loading-state">Chargement des champs partagés…</div>
+  }
+
+  @for (field of fields(); track field.id; let index = $index) {
+    <app-field-row [field]="field" [sortOrder]="index" (rowClosed)="onRowClosed(field)" class="w-full my-1">
     </app-field-row>
   }
 
   <div class="py-2">
-    <span class="material-icons text-5xl cursor-pointer hover:opacity-80" (click)="addRandomField()">add_circle</span>
+    <button type="button" class="add-field" [disabled]="adding()" (click)="addRandomField()" aria-label="Ajouter un champ">
+      <span class="material-icons text-5xl">{{ adding() ? 'hourglass_top' : 'add_circle' }}</span>
+    </button>
   </div>
 </div>
 
