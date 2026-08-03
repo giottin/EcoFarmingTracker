@@ -24,10 +24,13 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
   constructor(private readonly fieldService: FieldService) {}
 
   async ngOnInit() {
-    this.fields.set(await this.fieldService.getFields());
-    if (this.fields().length === 0) await this.addRandomField();
-    this.stopWatching = this.fieldService.watchFields(() => void this.reloadFields());
-    this.loading.set(false);
+    try {
+      this.fields.set(await this.fieldService.getFields());
+      if (this.fields().length === 0) await this.addRandomField();
+      this.stopWatching = this.fieldService.watchFields(() => void this.reloadFields());
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   ngOnDestroy() {

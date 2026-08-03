@@ -39,12 +39,19 @@ export class AdminAccessService {
       display_name: request.email.split('@')[0],
       role: 'member'
     });
-    if (error) {
+    if (error && error.code !== '23505') {
       this.error.set('Impossible d’autoriser cette adresse.');
       return false;
     }
 
-    await this.supabase.client.from('access_requests').delete().eq('user_id', request.user_id);
+    const {error: deleteError} = await this.supabase.client
+      .from('access_requests')
+      .delete()
+      .eq('user_id', request.user_id);
+    if (deleteError) {
+      this.error.set('L’adresse est autorisée, mais la demande n’a pas pu être retirée.');
+      return false;
+    }
     this.requests.update(items => items.filter(item => item.user_id !== request.user_id));
     return true;
   }

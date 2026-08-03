@@ -38,7 +38,16 @@ export class AuthService {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!error && data) {
+    if (error) {
+      console.error('Unable to verify workspace access', error);
+      await this.supabase.client.auth.signOut({scope: 'local'});
+      this.user.set(null);
+      this.isAdmin.set(false);
+      this.accessState.set('signed-out');
+      return;
+    }
+
+    if (data) {
       this.isAdmin.set(data.role === 'admin');
       this.accessState.set('authorized');
       return;
