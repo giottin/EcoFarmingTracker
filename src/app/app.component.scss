@@ -60,6 +60,6 @@
 .tool-navigation .material-icons { font-size: 1.25rem; }
 
 @media (max-width: 560px) {
-  .tool-navigation { width: calc(100% - 1rem); margin-top: 0.5rem; }
-  .tool-navigation button { padding-inline: 0.4rem; font-size: 0.78rem; }
+  .tool-navigation { width: calc(100% - 1rem); margin-top: 0.5rem; overflow-x: auto; }
+  .tool-navigation button { flex: 0 0 auto; min-width: max-content; padding-inline: 0.75rem; font-size: 0.78rem; }
 }

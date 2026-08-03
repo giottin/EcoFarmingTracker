@@ -1,0 +1,55 @@
+<section class="generator-shell">
+  <div class="generator-heading">
+    <div><span class="eyebrow">CRÉATEUR DE TEXTE ECO</span><h2>Générateur de panneaux</h2><p>Compose ton texte, personnalise son apparence puis copie le code prêt à coller dans Eco.</p></div>
+    <button type="button" class="reset-button" (click)="reset()"><span class="material-icons">restart_alt</span> Réinitialiser</button>
+  </div>
+  <div class="workspace">
+    <div class="editor-column">
+      <article class="panel">
+        <div class="panel-title"><span class="step">1</span><div><h3>Ton message</h3><small>Les retours à la ligne seront automatiquement convertis.</small></div></div>
+        <textarea rows="6" maxlength="1000" [(ngModel)]="text" (ngModelChange)="update()" placeholder="Écris le texte de ton panneau…"></textarea>
+        <button type="button" class="line-break-button" (click)="addLineBreak()"><span class="material-icons">keyboard_return</span> Ajouter une ligne</button>
+      </article>
+      <article class="panel">
+        <div class="panel-title"><span class="step">2</span><div><h3>Mise en forme</h3><small>Les réglages s’appliquent à tout le message.</small></div></div>
+        <div class="format-toolbar" aria-label="Mise en forme du texte">
+          <button type="button" [class.active]="bold" (click)="bold = !bold; update()" title="Gras"><b>B</b></button>
+          <button type="button" [class.active]="italic" (click)="italic = !italic; update()" title="Italique"><i>I</i></button>
+          <button type="button" [class.active]="underline" (click)="underline = !underline; update()" title="Souligné"><u>U</u></button>
+          <button type="button" [class.active]="strike" (click)="strike = !strike; update()" title="Barré"><s>S</s></button>
+          <button type="button" [class.active]="subscript" (click)="setSubscript()" title="Indice">X<sub>2</sub></button>
+          <button type="button" [class.active]="superscript" (click)="setSuperscript()" title="Exposant">X<sup>2</sup></button>
+          <button type="button" [class.active]="noWrap" (click)="noWrap = !noWrap; update()" title="Forcer sur une ligne"><span class="material-icons">wrap_text</span></button>
+        </div>
+        <div class="settings-grid">
+          <label class="color-setting"><span>Couleur</span><div><input type="color" [(ngModel)]="color" (ngModelChange)="update()"><input class="hex-input" maxlength="7" [(ngModel)]="color" (change)="update()"></div></label>
+          <label><span>Opacité : {{ opacity }}%</span><input type="range" min="0" max="100" [(ngModel)]="opacity" (ngModelChange)="update()"></label>
+          <label><span>Taille : {{ size }}</span><input type="range" min="1" max="7" step="1" [(ngModel)]="size" (ngModelChange)="update()"></label>
+          <div class="alignment-setting"><span>Alignement</span><div>
+            <button type="button" [class.active]="alignment === 'left'" (click)="setAlignment('left')"><span class="material-icons">format_align_left</span></button>
+            <button type="button" [class.active]="alignment === 'center'" (click)="setAlignment('center')"><span class="material-icons">format_align_center</span></button>
+            <button type="button" [class.active]="alignment === 'right'" (click)="setAlignment('right')"><span class="material-icons">format_align_right</span></button>
+          </div></div>
+        </div>
+      </article>
+      <article class="panel">
+        <div class="panel-title"><span class="step">3</span><div><h3>Icône facultative</h3><small>Utilise l’identifiant de l’objet Eco, par exemple StoneItem.</small></div></div>
+        <div class="icon-controls"><label><span>Nom de l’icône</span><input type="text" [(ngModel)]="iconName" (ngModelChange)="update()" placeholder="StoneItem"></label><label class="check-control"><input type="checkbox" [(ngModel)]="iconNoBackground" (ngModelChange)="update()"><span>Sans fond</span></label></div>
+      </article>
+    </div>
+    <div class="output-column">
+      <article class="preview-card">
+        <div class="preview-label"><span>Aperçu</span><small>Simulation indicative</small></div>
+        <div class="sign-board" [style.text-align]="alignment"><div class="preview-content" [style.color]="previewColor" [style.font-size]="previewSize" [style.font-weight]="bold ? 700 : 400" [style.font-style]="italic ? 'italic' : 'normal'" [style.text-decoration]="textDecoration" [style.white-space]="noWrap ? 'nowrap' : 'pre-wrap'">
+          @if (safeIconName) { <span class="icon-preview" [class.no-background]="iconNoBackground"><span class="material-icons">inventory_2</span><small>{{ safeIconName }}</small></span> }
+          <span [class.subscript]="subscript" [class.superscript]="superscript">{{ text || 'Ton texte apparaîtra ici' }}</span>
+        </div></div>
+      </article>
+      <article class="code-card">
+        <div class="code-heading"><div><span class="step">4</span><h3>Code pour Eco</h3></div><small>Prêt à coller dans le panneau</small></div>
+        <code>{{ generatedCode }}</code>
+        <button type="button" class="copy-button" (click)="copyCode()"><span class="material-icons">{{ copied ? 'check' : 'content_copy' }}</span>{{ copied ? 'Code copié !' : 'Copier le code' }}</button>
+      </article>
+    </div>
+  </div>
+</section>

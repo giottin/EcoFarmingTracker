@@ -1,34 +1,23 @@
 @switch (accessState()) {
-  @case ('signed-out') {
-    <app-login></app-login>
-  }
+  @case ('signed-out') { <app-login></app-login> }
   @case ('authorized') {
     <div class="flex flex-col min-h-screen">
       <app-header></app-header>
       <nav class="tool-navigation" aria-label="Outils Eco">
-        <button type="button" [class.active]="activeTool() === 'fields'" (click)="selectTool('fields')">
-          <span class="material-icons">grass</span>
-          Suivi des champs
-        </button>
-        <button type="button" [class.active]="activeTool() === 'fertilizer'" (click)="selectTool('fertilizer')">
-          <span class="material-icons">science</span>
-          Calculateur d’engrais
-        </button>
+        <button type="button" [class.active]="activeTool() === 'fields'" (click)="selectTool('fields')"><span class="material-icons">grass</span>Suivi des champs</button>
+        <button type="button" [class.active]="activeTool() === 'fertilizer'" (click)="selectTool('fertilizer')"><span class="material-icons">science</span>Calculateur d’engrais</button>
+        <button type="button" [class.active]="activeTool() === 'signs'" (click)="selectTool('signs')"><span class="material-icons">signpost</span>Générateur de panneaux</button>
       </nav>
       <main class="flex-1">
-        @if (auth.isAdmin()) {
-          <app-admin-panel></app-admin-panel>
-        }
-        @if (activeTool() === 'fields') {
-          <app-field-row-container></app-field-row-container>
-        } @else {
-          <app-fertilizer-calculator></app-fertilizer-calculator>
+        @if (auth.isAdmin()) { <app-admin-panel></app-admin-panel> }
+        @switch (activeTool()) {
+          @case ('fields') { <app-field-row-container></app-field-row-container> }
+          @case ('fertilizer') { <app-fertilizer-calculator></app-fertilizer-calculator> }
+          @case ('signs') { <app-sign-generator></app-sign-generator> }
         }
       </main>
       <app-footer></app-footer>
     </div>
   }
-  @default {
-    <main class="access-shell"><div class="loading-orb" aria-label="Chargement"></div></main>
-  }
+  @default { <main class="access-shell"><div class="loading-orb" aria-label="Chargement"></div></main> }
 }
