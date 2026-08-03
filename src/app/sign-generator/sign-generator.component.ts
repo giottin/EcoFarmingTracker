@@ -1,14 +1,7 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 
-type Alignment = 'left' | 'center' | 'right';
-
-interface SavedSign {
-  text: string; color: string; opacity: number; size: number; alignment: Alignment;
-  bold: boolean; italic: boolean; underline: boolean; strike: boolean;
-  subscript: boolean; superscript: boolean; noWrap: boolean;
-  iconName: string; iconNoBackground: boolean;
-}
+type Alignment = '' | 'left' | 'center' | 'right';
 
 @Component({
   selector: 'app-sign-generator',
@@ -17,105 +10,160 @@ interface SavedSign {
   styleUrl: './sign-generator.component.scss'
 })
 export class SignGeneratorComponent implements OnInit {
-  private readonly storageKey = 'eco-sign-generator';
-  text = 'Bienvenue dans notre ville !';
-  color = '#80CBC4';
+  @ViewChild('editor') private editor?: ElementRef<HTMLTextAreaElement>;
+  private readonly storageKey = 'eco-sign-generator-v2';
+
+  text = '';
+  color = '#00CACA';
   opacity = 100;
-  size = 3;
-  alignment: Alignment = 'center';
-  bold = false; italic = false; underline = false; strike = false;
-  subscript = false; superscript = false; noWrap = false;
-  iconName = ''; iconNoBackground = false; copied = false;
+  hue = 180;
+  saturation = 100;
+  lightness = 40;
+  selectedSize = '';
+  selectedAlignment: Alignment = '';
+  iconName = '';
+  iconNoBackground = false;
+  copied = false;
+  readonly palette = ['#FFFFFF', '#FF5252', '#FF9800', '#FFEB3B', '#4CAF50', '#00BCD4', '#2196F3', '#9C27B0', '#E91E63', '#795548'];
 
   ngOnInit() { this.restore(); }
 
-  get generatedCode(): string {
-    let content = this.escapeText(this.text).replace(/\r?\n/g, '<br>');
-    const icon = this.safeIconName;
-    if (icon) {
-      const iconCode = `<icon name='${icon}'${this.iconNoBackground ? ' type="nobg"' : ''}>`;
-      content = content ? `${iconCode} ${content}` : iconCode;
+  format(open: string, close: string) { this.wrapSelection(open, close); }
+  addLineBreak() { this.insertAtCursor('<br>'); }
+  addNoWrap() { this.wrapSelection('<nobr>', '</nobr>'); }
+
+  applyColor() {
+    const alpha = Math.round(this.opacity * 2.55).toString(16).padStart(2, '0').toUpperCase();
+    const code = `${this.color.toUpperCase()}${this.opacity < 100 ? alpha : ''}`;
+    this.wrapSelection(`<${code}>`, '</color>');
+  }
+
+  applySize() {
+    if (this.selectedSize) this.wrapSelection(`<size=${this.selectedSize}>`, '</size>');
+  }
+
+  applyAlignment() {
+    if (this.selectedAlignment) this.wrapSelection(`<align=${this.selectedAlignment}>`, '</align>');
+  }
+
+  insertIcon() {
+    const name = this.iconName.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!name) return;
+    this.insertAtCursor(`<icon name='${name}'${this.iconNoBackground ? ' type="nobg"' : ''}>`);
+  }
+
+  updateFromHsl() {
+    this.color = this.hslToHex(this.hue, this.saturation, this.lightness);
+    this.save();
+  }
+
+  selectColor(color: string) {
+    this.color = color.toUpperCase();
+    this.updateHslFromHex();
+  }
+
+  updateFromHex() {
+    const value = this.color.trim().toUpperCase();
+    if (/^#[0-9A-F]{6}$/.test(value)) {
+      this.color = value;
+      this.updateHslFromHex();
     }
-    if (this.bold) content = `<b>${content}</b>`;
-    if (this.italic) content = `<i>${content}</i>`;
-    if (this.underline) content = `<u>${content}</u>`;
-    if (this.strike) content = `<s>${content}</s>`;
-    if (this.subscript) content = `<sub>${content}</sub>`;
-    if (this.superscript) content = `<sup>${content}</sup>`;
-    content = `<${this.colorCode}>${content}</color>`;
-    content = `<size=${this.size}>${content}</size>`;
-    if (this.noWrap) content = `<nobr>${content}</nobr>`;
-    return `<align=${this.alignment}>${content}</align>`;
   }
 
-  get previewColor(): string {
-    const value = this.normalizedColor.slice(1);
-    return `rgba(${parseInt(value.slice(0, 2), 16)}, ${parseInt(value.slice(2, 4), 16)}, ${parseInt(value.slice(4, 6), 16)}, ${this.opacity / 100})`;
-  }
-  get previewSize(): string { return `${0.8 + this.size * 0.34}rem`; }
-  get textDecoration(): string {
-    return [this.underline ? 'underline' : '', this.strike ? 'line-through' : ''].filter(Boolean).join(' ') || 'none';
-  }
-  get safeIconName(): string { return this.iconName.trim().replace(/[^a-zA-Z0-9_-]/g, ''); }
+  onTextChange() { this.save(); this.copied = false; }
 
-  update() {
-    this.color = this.normalizedColor;
-    this.opacity = Math.min(100, Math.max(0, Number(this.opacity) || 0));
-    this.size = Math.min(7, Math.max(1, Math.round(Number(this.size) || 1)));
-    this.save(); this.copied = false;
-  }
-  setAlignment(alignment: Alignment) { this.alignment = alignment; this.update(); }
-  setSubscript() { this.subscript = !this.subscript; if (this.subscript) this.superscript = false; this.update(); }
-  setSuperscript() { this.superscript = !this.superscript; if (this.superscript) this.subscript = false; this.update(); }
-  addLineBreak() { this.text += this.text ? '\n' : ''; this.update(); }
-  async copyCode() {
+  async copyText() {
     try {
-      await navigator.clipboard.writeText(this.generatedCode);
+      await navigator.clipboard.writeText(this.text);
       this.copied = true;
       window.setTimeout(() => this.copied = false, 2500);
     } catch { this.copied = false; }
   }
+
   reset() {
-    this.text = ''; this.color = '#80CBC4'; this.opacity = 100; this.size = 3; this.alignment = 'center';
-    this.bold = false; this.italic = false; this.underline = false; this.strike = false;
-    this.subscript = false; this.superscript = false; this.noWrap = false;
-    this.iconName = ''; this.iconNoBackground = false; this.update();
+    this.text = '';
+    this.selectedSize = '';
+    this.selectedAlignment = '';
+    this.iconName = '';
+    this.iconNoBackground = false;
+    this.save();
+    this.focusEditor(0);
   }
 
-  private get normalizedColor(): string {
-    const value = this.color.trim().toUpperCase();
-    if (/^#[0-9A-F]{6}$/.test(value)) return value;
-    if (/^#[0-9A-F]{3}$/.test(value)) return `#${value.slice(1).split('').map(character => character + character).join('')}`;
-    return '#80CBC4';
+  private wrapSelection(open: string, close: string) {
+    const field = this.editor?.nativeElement;
+    const start = field?.selectionStart ?? this.text.length;
+    const end = field?.selectionEnd ?? start;
+    const selected = this.text.slice(start, end);
+    this.text = `${this.text.slice(0, start)}${open}${selected}${close}${this.text.slice(end)}`;
+    this.save();
+    this.focusEditor(selected ? start + open.length + selected.length + close.length : start + open.length);
   }
-  private get colorCode(): string {
-    const alpha = Math.round(this.opacity * 2.55).toString(16).padStart(2, '0').toUpperCase();
-    return `${this.normalizedColor}${this.opacity < 100 ? alpha : ''}`;
+
+  private insertAtCursor(code: string) {
+    const field = this.editor?.nativeElement;
+    const start = field?.selectionStart ?? this.text.length;
+    const end = field?.selectionEnd ?? start;
+    this.text = `${this.text.slice(0, start)}${code}${this.text.slice(end)}`;
+    this.save();
+    this.focusEditor(start + code.length);
   }
-  private escapeText(value: string): string {
-    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  private focusEditor(position: number) {
+    window.setTimeout(() => {
+      const field = this.editor?.nativeElement;
+      field?.focus();
+      field?.setSelectionRange(position, position);
+    });
   }
+
+  private updateHslFromHex() {
+    const red = parseInt(this.color.slice(1, 3), 16) / 255;
+    const green = parseInt(this.color.slice(3, 5), 16) / 255;
+    const blue = parseInt(this.color.slice(5, 7), 16) / 255;
+    const max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+    const delta = max - min;
+    let hue = 0;
+    if (delta) {
+      if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+      else if (max === green) hue = 60 * ((blue - red) / delta + 2);
+      else hue = 60 * ((red - green) / delta + 4);
+    }
+    const lightness = (max + min) / 2;
+    const saturation = delta ? delta / (1 - Math.abs(2 * lightness - 1)) : 0;
+    this.hue = Math.round(hue < 0 ? hue + 360 : hue);
+    this.saturation = Math.round(saturation * 100);
+    this.lightness = Math.round(lightness * 100);
+    this.save();
+  }
+
+  private hslToHex(hue: number, saturation: number, lightness: number): string {
+    const s = saturation / 100, l = lightness / 100;
+    const chroma = (1 - Math.abs(2 * l - 1)) * s;
+    const x = chroma * (1 - Math.abs((hue / 60) % 2 - 1));
+    const m = l - chroma / 2;
+    let red = 0, green = 0, blue = 0;
+    if (hue < 60) [red, green] = [chroma, x];
+    else if (hue < 120) [red, green] = [x, chroma];
+    else if (hue < 180) [green, blue] = [chroma, x];
+    else if (hue < 240) [green, blue] = [x, chroma];
+    else if (hue < 300) [red, blue] = [x, chroma];
+    else [red, blue] = [chroma, x];
+    return `#${[red, green, blue].map(value => Math.round((value + m) * 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+  }
+
   private save() {
-    const state: SavedSign = {
-      text: this.text, color: this.color, opacity: this.opacity, size: this.size, alignment: this.alignment,
-      bold: this.bold, italic: this.italic, underline: this.underline, strike: this.strike,
-      subscript: this.subscript, superscript: this.superscript, noWrap: this.noWrap,
-      iconName: this.iconName, iconNoBackground: this.iconNoBackground
-    };
-    localStorage.setItem(this.storageKey, JSON.stringify(state));
+    localStorage.setItem(this.storageKey, JSON.stringify({text: this.text, color: this.color, opacity: this.opacity}));
   }
+
   private restore() {
     try {
-      const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null') as Partial<SavedSign> | null;
+      const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null');
       if (!saved) return;
-      this.text = typeof saved.text === 'string' ? saved.text : this.text;
-      this.color = typeof saved.color === 'string' ? saved.color : this.color;
-      this.opacity = Number(saved.opacity ?? this.opacity); this.size = Number(saved.size ?? this.size);
-      this.alignment = ['left', 'center', 'right'].includes(saved.alignment ?? '') ? saved.alignment as Alignment : 'center';
-      this.bold = Boolean(saved.bold); this.italic = Boolean(saved.italic); this.underline = Boolean(saved.underline);
-      this.strike = Boolean(saved.strike); this.subscript = Boolean(saved.subscript); this.superscript = Boolean(saved.superscript);
-      this.noWrap = Boolean(saved.noWrap); this.iconName = typeof saved.iconName === 'string' ? saved.iconName : '';
-      this.iconNoBackground = Boolean(saved.iconNoBackground); this.update();
+      this.text = typeof saved.text === 'string' ? saved.text : '';
+      this.color = /^#[0-9A-Fa-f]{6}$/.test(saved.color) ? saved.color.toUpperCase() : this.color;
+      this.opacity = Math.min(100, Math.max(0, Number(saved.opacity) || 100));
+      this.updateHslFromHex();
     } catch { localStorage.removeItem(this.storageKey); }
   }
 }

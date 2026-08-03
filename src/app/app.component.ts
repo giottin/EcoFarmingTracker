@@ -1,5 +1,4 @@
 import {Component, effect, signal, Signal} from '@angular/core';
-import {FooterComponent} from './footer/footer.component';
 import {HeaderComponent} from './header/header.component';
 import {FieldRowContainerComponent} from './field-row-container/field-row-container.component';
 import {LoginComponent} from './login/login.component';
@@ -15,7 +14,6 @@ type Tool = 'fields' | 'fertilizer' | 'signs';
 @Component({
   selector: 'app-root',
   imports: [
-    FooterComponent,
     HeaderComponent,
     FieldRowContainerComponent,
     LoginComponent,

@@ -3,8 +3,14 @@ header {
 }
 
 .user-email { margin: 0 1rem; color: rgba(255, 255, 255, 0.65); font-size: 0.85rem; }
+.brand-title { display: flex; align-items: baseline; gap: .65rem; margin: 0 1rem; }
+.brand-title h1 { margin: 0; font-size: 1.25rem; }
+.brand-title span { color: rgba(255,255,255,.48); font-size: .72rem; white-space: nowrap; }
+.brand-title strong { color: #80cbc4; }
 
 @media (max-width: 720px) {
   .user-email { display: none; }
-  h1 { font-size: 1rem; margin-inline: 0.6rem; }
+  .brand-title { align-items: flex-start; flex-direction: column; gap: 0; margin-inline: .6rem; }
+  .brand-title h1 { font-size: 1rem; }
+  .brand-title span { font-size: .6rem; }
 }

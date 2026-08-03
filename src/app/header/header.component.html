@@ -1,7 +1,10 @@
 <header class="flex items-center p-4 border-b border-light-blue">
   <img ngSrc="https://raw.githubusercontent.com/aritchie05/EcoCraftingTool/refs/heads/master/src/assets/img/eco-logo-new.webp"
        width="91" height="30" alt="Eco Logo" priority>
-  <h1 class="mx-4 text-xl">Eco Tools</h1>
+  <div class="brand-title">
+    <h1>Eco Tools</h1>
+    <span>Développé par <strong>Giottin</strong></span>
+  </div>
   <div class="ml-auto flex items-center">
     <span class="material-icons cursor-pointer hover:opacity-80 mx-2" (click)="openSettingsDialog()">settings</span>
     <span class="user-email">{{ auth.email() }}</span>
