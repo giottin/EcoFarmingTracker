@@ -9,6 +9,7 @@ p { margin: 0; color: rgba(255,255,255,.65); line-height: 1.5; }
 .soil-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-top: 1.5rem; }
 .soil-input { padding: 1rem; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: var(--mat-sys-surface-container-low); }
 .soil-input > span { display: block; margin-bottom: .6rem; color: rgba(255,255,255,.7); font-size: .85rem; }
+.soil-input > span em, .result-grid span em { margin-left: .25rem; color: #80cbc4; font-size: .72rem; font-style: normal; font-weight: 700; white-space: nowrap; }
 .soil-input div { display: flex; align-items: baseline; gap: .3rem; }
 .soil-input input { min-width: 0; width: 100%; border: 0; outline: 0; color: white; background: transparent; font: 700 1.7rem/1 Roboto, sans-serif; }
 .soil-input b { color: rgba(255,255,255,.45); }
@@ -22,7 +23,14 @@ p { margin: 0; color: rgba(255,255,255,.65); line-height: 1.5; }
 .result-grid div:last-child { border-right: 0; }.result-grid span { grid-column: 1/-1; color: rgba(255,255,255,.58); font-size: .8rem; }.result-grid strong { font-size: clamp(1.5rem,4vw,2.2rem); }.result-grid small { color: #a5d6a7; }
 .recommendation { margin-top: 2rem; }.section-title p { margin-top: .25rem; }.total-pill { display: flex; align-items: center; gap: .55rem; padding: .65rem .9rem; border-radius: 999px; background: rgba(128,203,196,.12); }.total-pill strong { color: #80cbc4; font-size: 1.25rem; }.total-pill span { color: rgba(255,255,255,.65); font-size: .8rem; }
 .fertilizer-list { margin-top: 1rem; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: var(--mat-sys-surface-container-low); }
+.nutrient-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin-top: 1rem; }
+.nutrient-legend > div { display: flex; align-items: center; gap: .65rem; padding: .65rem .8rem; border: 1px solid rgba(128,203,196,.22); border-radius: .8rem; background: rgba(128,203,196,.06); }
+.nutrient-legend b { display: grid; flex: 0 0 1.85rem; width: 1.85rem; height: 1.85rem; place-items: center; border-radius: .5rem; color: #062b2c; background: #80cbc4; }
+.nutrient-legend strong, .nutrient-legend small { display: block; }
+.nutrient-legend strong { font-size: .8rem; }
+.nutrient-legend small { color: rgba(255,255,255,.55); font-size: .68rem; }
 .fertilizer-row { display: grid; grid-template-columns: 1fr 7rem 7rem; align-items: center; gap: 1rem; padding: .85rem 1rem; border-bottom: 1px solid rgba(255,255,255,.08); }.fertilizer-row:last-child { border-bottom: 0; }.fertilizer-row.unused { opacity: .32; }.fertilizer-row small { display: block; margin-top: .2rem; color: rgba(255,255,255,.5); font-size: .75rem; }.quantity { text-align: right; }.quantity strong,.quantity span { display: block; }.quantity strong { color: #80cbc4; font-size: 1.25rem; }.quantity span { color: rgba(255,255,255,.48); font-size: .7rem; }.quantity.total strong { color: white; }
 .method { display: flex; gap: .55rem; margin-top: .85rem; font-size: .78rem; }.method .material-icons { color: #80cbc4; font-size: 1.1rem; }
 @media (max-width:760px) { .heading { align-items:flex-start; }.reset-button { padding:.55rem; font-size:0; }.soil-grid { grid-template-columns:1fr 1fr; }.result-heading,.section-title { align-items:flex-start; flex-direction:column; }.result-grid { gap:.5rem; }.result-grid div { display:block; }.result-grid strong,.result-grid small { display:block; }.fertilizer-row { grid-template-columns:1fr 4.5rem 4.5rem; gap:.5rem; } }
+@media (max-width:560px) { .nutrient-legend { grid-template-columns:1fr; } }
 @media (max-width:420px) { .auto-shell { width:calc(100% - 1rem); }.soil-grid { grid-template-columns:1fr; }.fertilizer-row { grid-template-columns:1fr auto; }.quantity.total { display:none; } }

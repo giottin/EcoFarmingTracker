@@ -13,15 +13,15 @@
 
   <div class="soil-grid">
     <label class="soil-input nitrogen">
-      <span>Azote actuel</span>
+      <span>Azote actuel <em>N · Nitrogen</em></span>
       <div><input type="number" min="0" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="updateInputs()"><b>%</b></div>
     </label>
     <label class="soil-input phosphorus">
-      <span>Phosphore actuel</span>
+      <span>Phosphore actuel <em>P · Phosphorus</em></span>
       <div><input type="number" min="0" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="updateInputs()"><b>%</b></div>
     </label>
     <label class="soil-input potassium">
-      <span>Potassium actuel</span>
+      <span>Potassium actuel <em>K · Potassium</em></span>
       <div><input type="number" min="0" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="updateInputs()"><b>%</b></div>
     </label>
     <label class="soil-input claims">
@@ -36,9 +36,9 @@
       <small>Écart entre les nutriments : {{ format(balanceGap) }} points</small>
     </div>
     <div class="result-grid">
-      <div><span>Azote</span><strong>{{ format(after.nitrogen) }}%</strong><small>+ {{ format(increase.nitrogen) }}</small></div>
-      <div><span>Phosphore</span><strong>{{ format(after.phosphorus) }}%</strong><small>+ {{ format(increase.phosphorus) }}</small></div>
-      <div><span>Potassium</span><strong>{{ format(after.potassium) }}%</strong><small>+ {{ format(increase.potassium) }}</small></div>
+      <div><span>Azote <em>N · Nitrogen</em></span><strong>{{ format(after.nitrogen) }}%</strong><small>+ {{ format(increase.nitrogen) }}</small></div>
+      <div><span>Phosphore <em>P · Phosphorus</em></span><strong>{{ format(after.phosphorus) }}%</strong><small>+ {{ format(increase.phosphorus) }}</small></div>
+      <div><span>Potassium <em>K · Potassium</em></span><strong>{{ format(after.potassium) }}%</strong><small>+ {{ format(increase.potassium) }}</small></div>
     </div>
   </div>
 
@@ -46,6 +46,12 @@
     <div class="section-title">
       <div><h3>Plan d’engraissement</h3><p>Les quantités sont indiquées par claim.</p></div>
       <div class="total-pill"><strong>{{ totalItems }}</strong><span>engrais au total</span></div>
+    </div>
+
+    <div class="nutrient-legend" aria-label="Correspondance des nutriments N, P et K">
+      <div><b>N</b><span><strong>Azote</strong><small>Nitrogen</small></span></div>
+      <div><b>P</b><span><strong>Phosphore</strong><small>Phosphorus</small></span></div>
+      <div><b>K</b><span><strong>Potassium</strong><small>Potassium</small></span></div>
     </div>
 
     <div class="fertilizer-list">

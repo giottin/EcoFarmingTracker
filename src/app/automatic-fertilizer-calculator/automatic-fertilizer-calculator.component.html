@@ -5,9 +5,9 @@
   </div>
 
   <div class="soil-grid">
-    <label class="soil-input nitrogen"><span>Azote actuel</span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
-    <label class="soil-input phosphorus"><span>Phosphore actuel</span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
-    <label class="soil-input potassium"><span>Potassium actuel</span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input nitrogen"><span>Azote actuel <em>N · Nitrogen</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input phosphorus"><span>Phosphore actuel <em>P · Phosphorus</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input potassium"><span>Potassium actuel <em>K · Potassium</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
     <label class="soil-input claims"><span>Nombre de claims</span><div><input type="number" min="1" step="1" [(ngModel)]="claims" (ngModelChange)="calculate()"></div></label>
   </div>
 
@@ -15,14 +15,19 @@
     <article class="result-card">
       <div class="result-heading"><div><span>Meilleur résultat trouvé</span><small>Aucun nutriment ne dépasse 100 %</small></div><div class="score"><strong>{{ format(result.totalDeficit) }}</strong><span>points manquants</span></div></div>
       <div class="result-grid">
-        <div><span>Azote</span><strong>{{ format(result.final.nitrogen) }}%</strong><small>reste {{ format(100 - result.final.nitrogen) }}</small></div>
-        <div><span>Phosphore</span><strong>{{ format(result.final.phosphorus) }}%</strong><small>reste {{ format(100 - result.final.phosphorus) }}</small></div>
-        <div><span>Potassium</span><strong>{{ format(result.final.potassium) }}%</strong><small>reste {{ format(100 - result.final.potassium) }}</small></div>
+        <div><span>Azote <em>N · Nitrogen</em></span><strong>{{ format(result.final.nitrogen) }}%</strong><small>reste {{ format(100 - result.final.nitrogen) }}</small></div>
+        <div><span>Phosphore <em>P · Phosphorus</em></span><strong>{{ format(result.final.phosphorus) }}%</strong><small>reste {{ format(100 - result.final.phosphorus) }}</small></div>
+        <div><span>Potassium <em>K · Potassium</em></span><strong>{{ format(result.final.potassium) }}%</strong><small>reste {{ format(100 - result.final.potassium) }}</small></div>
       </div>
     </article>
 
     <section class="recommendation">
       <div class="section-title"><div><h3>Engrais à appliquer</h3><p>Quantités indiquées par claim, puis total pour toute la zone.</p></div><div class="total-pill"><strong>{{ result.total * claims }}</strong><span>engrais au total</span></div></div>
+      <div class="nutrient-legend" aria-label="Correspondance des nutriments N, P et K">
+        <div><b>N</b><span><strong>Azote</strong><small>Nitrogen</small></span></div>
+        <div><b>P</b><span><strong>Phosphore</strong><small>Phosphorus</small></span></div>
+        <div><b>K</b><span><strong>Potassium</strong><small>Potassium</small></span></div>
+      </div>
       <div class="fertilizer-list">
         @for (fertilizer of fertilizers; track fertilizer.name; let index = $index) {
           <article class="fertilizer-row" [class.unused]="quantity(index) === 0">
