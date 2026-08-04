@@ -1,0 +1,28 @@
+:host { display: block; }
+.auto-shell { width: min(100% - 2rem, 72rem); margin: 1.5rem auto 3rem; }
+.heading, .section-title, .result-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.eyebrow { color: #80cbc4; font-size: .75rem; font-weight: 700; letter-spacing: .18em; }
+h2 { margin: .35rem 0 .25rem; font-size: clamp(1.8rem, 4vw, 2.6rem); }
+h3 { margin: 0; font-size: 1.25rem; }
+p { margin: 0; color: rgba(255,255,255,.65); line-height: 1.5; }
+.reset-button { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem .9rem; border: 1px solid rgba(128,203,196,.35); border-radius: .75rem; color: #b2dfdb; background: transparent; cursor: pointer; }
+.soil-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-top: 1.5rem; }
+.soil-input { padding: 1rem; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: var(--mat-sys-surface-container-low); }
+.soil-input > span { display: block; margin-bottom: .6rem; color: rgba(255,255,255,.7); font-size: .85rem; }
+.soil-input div { display: flex; align-items: baseline; gap: .3rem; }
+.soil-input input { min-width: 0; width: 100%; border: 0; outline: 0; color: white; background: transparent; font: 700 1.7rem/1 Roboto, sans-serif; }
+.soil-input b { color: rgba(255,255,255,.45); }
+.nitrogen { border-top: 3px solid #42a5f5; } .phosphorus { border-top: 3px solid #ef5350; } .potassium { border-top: 3px solid #fbc02d; } .claims { border-top: 3px solid #80cbc4; }
+.result-card { margin-top: 1rem; padding: 1.25rem; border: 1px solid rgba(128,203,196,.3); border-radius: 1.25rem; background: linear-gradient(135deg, rgba(0,188,212,.12), rgba(76,175,80,.08)); }
+.result-heading > div:first-child { display: grid; } .result-heading > div:first-child > span { font-weight: 700; } .result-heading small { color: #80cbc4; }
+.score { display: flex; align-items: center; gap: .5rem; padding: .55rem .8rem; border-radius: .75rem; background: rgba(128,203,196,.1); }
+.score strong { color: #80cbc4; font-size: 1.35rem; } .score span { color: rgba(255,255,255,.58); font-size: .75rem; }
+.result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.25rem; }
+.result-grid div { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: .25rem; padding-right: 1rem; border-right: 1px solid rgba(255,255,255,.1); }
+.result-grid div:last-child { border-right: 0; }.result-grid span { grid-column: 1/-1; color: rgba(255,255,255,.58); font-size: .8rem; }.result-grid strong { font-size: clamp(1.5rem,4vw,2.2rem); }.result-grid small { color: #a5d6a7; }
+.recommendation { margin-top: 2rem; }.section-title p { margin-top: .25rem; }.total-pill { display: flex; align-items: center; gap: .55rem; padding: .65rem .9rem; border-radius: 999px; background: rgba(128,203,196,.12); }.total-pill strong { color: #80cbc4; font-size: 1.25rem; }.total-pill span { color: rgba(255,255,255,.65); font-size: .8rem; }
+.fertilizer-list { margin-top: 1rem; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: var(--mat-sys-surface-container-low); }
+.fertilizer-row { display: grid; grid-template-columns: 1fr 7rem 7rem; align-items: center; gap: 1rem; padding: .85rem 1rem; border-bottom: 1px solid rgba(255,255,255,.08); }.fertilizer-row:last-child { border-bottom: 0; }.fertilizer-row.unused { opacity: .32; }.fertilizer-row small { display: block; margin-top: .2rem; color: rgba(255,255,255,.5); font-size: .75rem; }.quantity { text-align: right; }.quantity strong,.quantity span { display: block; }.quantity strong { color: #80cbc4; font-size: 1.25rem; }.quantity span { color: rgba(255,255,255,.48); font-size: .7rem; }.quantity.total strong { color: white; }
+.method { display: flex; gap: .55rem; margin-top: .85rem; font-size: .78rem; }.method .material-icons { color: #80cbc4; font-size: 1.1rem; }
+@media (max-width:760px) { .heading { align-items:flex-start; }.reset-button { padding:.55rem; font-size:0; }.soil-grid { grid-template-columns:1fr 1fr; }.result-heading,.section-title { align-items:flex-start; flex-direction:column; }.result-grid { gap:.5rem; }.result-grid div { display:block; }.result-grid strong,.result-grid small { display:block; }.fertilizer-row { grid-template-columns:1fr 4.5rem 4.5rem; gap:.5rem; } }
+@media (max-width:420px) { .auto-shell { width:calc(100% - 1rem); }.soil-grid { grid-template-columns:1fr; }.fertilizer-row { grid-template-columns:1fr auto; }.quantity.total { display:none; } }

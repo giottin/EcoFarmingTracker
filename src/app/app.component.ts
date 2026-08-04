@@ -8,8 +8,9 @@ import {MatButtonModule} from '@angular/material/button';
 import {AdminPanelComponent} from './admin-panel/admin-panel.component';
 import {FertilizerCalculatorComponent} from './fertilizer-calculator/fertilizer-calculator.component';
 import {SignGeneratorComponent} from './sign-generator/sign-generator.component';
+import {AutomaticFertilizerCalculatorComponent} from './automatic-fertilizer-calculator/automatic-fertilizer-calculator.component';
 
-type Tool = 'fields' | 'fertilizer' | 'signs';
+type Tool = 'fields' | 'fertilizer' | 'signs' | 'automatic-fertilizer';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +21,8 @@ type Tool = 'fields' | 'fertilizer' | 'signs';
     MatButtonModule,
     AdminPanelComponent,
     FertilizerCalculatorComponent,
-    SignGeneratorComponent
+    SignGeneratorComponent,
+    AutomaticFertilizerCalculatorComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
