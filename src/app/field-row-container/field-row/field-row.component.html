@@ -19,24 +19,31 @@
         }
       </mat-select>
     </mat-form-field>
-    <mat-form-field appearance="outline" floatLabel="always" class="m-3 cursor-not-allowed w-32">
-      <mat-label>Growth Time</mat-label>
-      <input matInput readonly type="text"
-             [value]="displayedGrowthTime()"
-             class="cursor-not-allowed">
-    </mat-form-field>
+    <div class="maturity-panel" aria-live="polite">
+      @switch (fieldStatus()) {
+        @case ('growing') {
+          <span>Prêt le</span>
+          <strong>{{ maturityLabel() }}</strong>
+          <small><span class="material-icons">schedule</span>{{ countdown() }}</small>
+        }
+        @case ('ready') {
+          <span>Maturité atteinte</span>
+          <strong>Prêt à récolter</strong>
+          <small>Depuis le {{ maturityLabel() }}</small>
+        }
+        @default {
+          <span>État du champ</span>
+          <strong>À replanter</strong>
+          <small>Aucune culture en pousse</small>
+        }
+      }
+    </div>
     <div class="field-actions">
       <button type="button" mat-stroked-button (click)="onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
       <button type="button" mat-stroked-button class="talent-button" (click)="onGentlePlant()" title="Gentle Seeding : commence à 20 % de maturité">Replanter + talent</button>
-      @if (field().plantTime()) {
-        <span>{{ displayedPlantTime() }}</span>
-      }
     </div>
     <div class="harvest-action">
       <button type="button" mat-stroked-button (click)="onHarvest()" [disabled]="!field().isPlanted()">Harvest</button>
-      @if (field().harvestTime()) {
-        <span>{{ displayedHarvestTime() }}</span>
-      }
     </div>
     <div class="mx-2 flex items-center">
       <span class="material-icons cursor-pointer hover:opacity-80" (click)="rowClosed.emit(field())">close</span>

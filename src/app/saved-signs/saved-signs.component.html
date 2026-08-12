@@ -14,7 +14,7 @@
       @for (sign of savedSigns.signs(); track sign.id) {
         <article class="sign-card" role="button" tabindex="0" (click)="copy(sign)" (keydown.enter)="copy(sign)" (keydown.space)="copy(sign); $event.preventDefault()">
           <button type="button" class="delete-sign" (click)="remove($event, sign)" aria-label="Supprimer ce panneau">×</button>
-          <div class="sign-preview">{{ preview(sign.content) }}</div>
+          <div class="sign-preview" [innerHTML]="preview(sign.content)"></div>
           <footer><span>{{ sign.content.length }} caractères</span><strong>{{ copiedId() === sign.id ? 'Copié !' : 'Cliquer pour copier' }}</strong></footer>
         </article>
       }

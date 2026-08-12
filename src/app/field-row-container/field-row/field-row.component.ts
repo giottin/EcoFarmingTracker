@@ -1,4 +1,4 @@
-import {Component, computed, input, OnDestroy, output, signal, WritableSignal} from '@angular/core';
+import {Component, computed, input, output, signal, WritableSignal} from '@angular/core';
 import {Field} from '../../model/field';
 import {MatInputModule} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
@@ -8,7 +8,6 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {StorageService} from '../../service/storage.service';
-import {Duration} from '../../model/duration';
 
 @Component({
   selector: 'app-field-row',
@@ -16,36 +15,38 @@ import {Duration} from '../../model/duration';
   templateUrl: './field-row.component.html',
   styleUrl: './field-row.component.scss'
 })
-export class FieldRowComponent implements OnDestroy {
+export class FieldRowComponent {
   field = input.required<Field>();
   sortOrder = input.required<number>();
+  now = input.required<number>();
   rowClosed = output<Field>();
 
-  private readonly now = signal(Date.now());
-  private readonly clock = window.setInterval(() => this.now.set(Date.now()), 1000);
   readonly fieldStatus = computed<'growing' | 'ready' | 'harvested'>(() => {
     if (!this.field().isPlanted() || !this.field().harvestTime()) return 'harvested';
     return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
   });
   readonly fieldPlaceholder = computed(() => `${this.field().crop().name().split(' ')[0]} Field`);
-  readonly displayedGrowthTime = computed(() => {
-    let duration = this.field().crop().growthTime();
-    if (this.field().selfRegenFullyGrown()) {
-      duration = Duration.multiplyDuration(duration, 0.5);
-    }
-    return `${duration.hours}H:${duration.minutes}M`;
+  readonly maturityLabel = computed(() => {
+    const maturity = this.field().harvestTime();
+    if (!maturity) return '';
+    const includeYear = maturity.getFullYear() !== new Date(this.now()).getFullYear();
+    const date = maturity.toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'long', ...(includeYear ? {year: 'numeric' as const} : {})
+    });
+    const time = maturity.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+    return `${date} à ${time}`;
   });
-
-  readonly dateOptions: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23'
-  }
-
-  readonly displayedPlantTime = computed(() => this.field().plantTime()?.toLocaleString([], this.dateOptions));
-  readonly displayedHarvestTime = computed(() => this.field().harvestTime()?.toLocaleString([], this.dateOptions));
+  readonly countdown = computed(() => {
+    const maturity = this.field().harvestTime();
+    if (!maturity) return '';
+    const remainingMinutes = Math.ceil((maturity.getTime() - this.now()) / 60000);
+    if (remainingMinutes <= 0) return 'Prêt';
+    const days = Math.floor(remainingMinutes / 1440);
+    const hours = Math.floor((remainingMinutes % 1440) / 60);
+    const minutes = remainingMinutes % 60;
+    const clock = `${String(hours).padStart(2, '0')} h ${String(minutes).padStart(2, '0')} min`;
+    return days > 0 ? `${days} j ${clock}` : clock;
+  });
 
   readonly cropOptions: WritableSignal<Crop[]> = signal([]);
 
@@ -84,8 +85,6 @@ export class FieldRowComponent implements OnDestroy {
   private save() {
     this.storageService.saveField(this.field(), this.sortOrder());
   }
-
-  ngOnDestroy() { window.clearInterval(this.clock); }
 
   protected readonly close = close;
 }

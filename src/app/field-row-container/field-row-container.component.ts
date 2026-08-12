@@ -19,6 +19,8 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
   readonly fields = signal<Field[]>([]);
   readonly loading = signal(true);
   readonly adding = signal(false);
+  readonly now = signal(Date.now());
+  private readonly clock = window.setInterval(() => this.now.set(Date.now()), 15000);
   private stopWatching?: () => void;
 
   constructor(private readonly fieldService: FieldService) {}
@@ -34,6 +36,7 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    window.clearInterval(this.clock);
     this.stopWatching?.();
   }
 

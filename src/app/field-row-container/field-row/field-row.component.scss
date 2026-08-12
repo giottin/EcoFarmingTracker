@@ -5,5 +5,13 @@
 .field-harvested { border-color: rgba(239, 83, 80, .46); background: linear-gradient(135deg, rgba(211, 47, 47, .19), rgba(79, 22, 22, .16)); box-shadow: inset 4px 0 #ef5350; }
 .field-actions, .harvest-action { width: 12rem; margin: 0 1rem; display: flex; flex-direction: column; align-items: stretch; gap: .4rem; text-align: center; }
 .field-actions span, .harvest-action span { color: rgba(255,255,255,.7); font-size: .7rem; }
+.maturity-panel { display: flex; flex: 1 1 15rem; min-width: 14rem; margin: .45rem .75rem; padding: .65rem .85rem; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; background: rgba(7,18,19,.42); }
+.maturity-panel > span { color: rgba(255,255,255,.55); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.maturity-panel strong { margin-top: .12rem; color: #fff; font-size: clamp(1rem, 2vw, 1.28rem); line-height: 1.25; }
+.maturity-panel small { display: inline-flex; align-items: center; gap: .3rem; margin-top: .35rem; color: rgba(255,255,255,.7); font-size: .78rem; }
+.maturity-panel .material-icons { color: #ffb74d; font-size: 1rem; }
+.field-ready .maturity-panel .material-icons, .field-ready .maturity-panel strong { color: #a5d6a7; }
+.field-harvested .maturity-panel strong { color: #ef9a9a; }
 .talent-button { font-size: .75rem; line-height: 1.1; }
-@media (max-width: 700px) { .field-card { margin-inline: .5rem; } .field-actions, .harvest-action { width: 100%; margin: .35rem .75rem; } }
+@media (max-width: 900px) { .maturity-panel { order: 3; flex-basis: calc(100% - 1.5rem); } .field-actions, .harvest-action { flex: 1 1 10rem; width: auto; } }
+@media (max-width: 700px) { .field-card { margin-inline: .5rem; } .maturity-panel { min-width: 0; } .field-actions, .harvest-action { width: 100%; margin: .35rem .75rem; } }
