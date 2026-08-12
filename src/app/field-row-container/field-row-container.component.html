@@ -1,4 +1,9 @@
 <div class="flex flex-col items-center pt-2">
+  <div class="status-legend" aria-label="Légende de l’état des champs">
+    <span><i class="growing"></i>Planté / en pousse</span>
+    <span><i class="ready"></i>Prêt à récolter</span>
+    <span><i class="harvested"></i>Récolté / à replanter</span>
+  </div>
   @if (loading()) {
     <div class="loading-state">Chargement des champs partagés…</div>
   }

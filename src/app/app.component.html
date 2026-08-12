@@ -7,6 +7,7 @@
         <button type="button" [class.active]="activeTool() === 'fields'" (click)="selectTool('fields')"><span class="material-icons">grass</span>Suivi des champs</button>
         <button type="button" [class.active]="activeTool() === 'fertilizer'" (click)="selectTool('fertilizer')"><span class="material-icons">science</span>Calculateur d’engrais</button>
         <button type="button" [class.active]="activeTool() === 'signs'" (click)="selectTool('signs')"><span class="material-icons">signpost</span>Générateur de panneaux</button>
+        <button type="button" [class.active]="activeTool() === 'saved-signs'" (click)="selectTool('saved-signs')"><span class="material-icons">bookmarks</span>Mes panneaux</button>
         <button type="button" [class.active]="activeTool() === 'automatic-fertilizer'" (click)="selectTool('automatic-fertilizer')"><span class="material-icons">auto_awesome</span>Engrais automatique</button>
       </nav>
       <main class="flex-1">
@@ -15,6 +16,7 @@
           @case ('fields') { <app-field-row-container></app-field-row-container> }
           @case ('fertilizer') { <app-fertilizer-calculator></app-fertilizer-calculator> }
           @case ('signs') { <app-sign-generator></app-sign-generator> }
+          @case ('saved-signs') { <app-saved-signs></app-saved-signs> }
           @case ('automatic-fertilizer') { <app-automatic-fertilizer-calculator></app-automatic-fertilizer-calculator> }
         }
       </main>

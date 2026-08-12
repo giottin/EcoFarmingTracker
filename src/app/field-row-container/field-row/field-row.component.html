@@ -1,4 +1,4 @@
-<div class="m-4">
+<div class="field-card" [class.field-growing]="fieldStatus() === 'growing'" [class.field-ready]="fieldStatus() === 'ready'" [class.field-harvested]="fieldStatus() === 'harvested'">
   <form class="flex flex-wrap items-center">
     <mat-form-field appearance="outline" floatLabel="always" class="m-3 flex-1 min-w-48">
       <mat-label>Field Name</mat-label>
@@ -25,14 +25,15 @@
              [value]="displayedGrowthTime()"
              class="cursor-not-allowed">
     </mat-form-field>
-    <div class="mx-4 w-40 flex flex-col items-center">
-      <button type="button" mat-stroked-button class="w-28 mb-2" (click)="onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
+    <div class="field-actions">
+      <button type="button" mat-stroked-button (click)="onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
+      <button type="button" mat-stroked-button class="talent-button" (click)="onGentlePlant()" title="Gentle Seeding : commence à 20 % de maturité">Replanter + talent</button>
       @if (field().plantTime()) {
         <span>{{ displayedPlantTime() }}</span>
       }
     </div>
-    <div class="mx-4 w-40 flex flex-col items-center">
-      <button type="button" mat-stroked-button class="w-28 mb-2" (click)="onHarvest()">Harvest</button>
+    <div class="harvest-action">
+      <button type="button" mat-stroked-button (click)="onHarvest()" [disabled]="!field().isPlanted()">Harvest</button>
       @if (field().harvestTime()) {
         <span>{{ displayedHarvestTime() }}</span>
       }

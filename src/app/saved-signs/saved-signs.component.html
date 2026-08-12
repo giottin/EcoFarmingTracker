@@ -1,0 +1,23 @@
+<section class="saved-shell">
+  <header>
+    <span class="eyebrow">BIBLIOTHÈQUE PARTAGÉE</span>
+    <h2>Mes panneaux</h2>
+    <p>Clique sur une carte pour copier instantanément tout son contenu.</p>
+  </header>
+
+  @if (savedSigns.loading()) {
+    <p class="state">Chargement des panneaux…</p>
+  } @else if (savedSigns.signs().length === 0) {
+    <div class="empty-state"><span class="material-icons">signpost</span><h3>Aucun panneau sauvegardé</h3><p>Crée ton premier panneau dans le générateur, puis utilise « Sauvegarder ».</p></div>
+  } @else {
+    <div class="sign-grid">
+      @for (sign of savedSigns.signs(); track sign.id) {
+        <article class="sign-card" role="button" tabindex="0" (click)="copy(sign)" (keydown.enter)="copy(sign)" (keydown.space)="copy(sign); $event.preventDefault()">
+          <button type="button" class="delete-sign" (click)="remove($event, sign)" aria-label="Supprimer ce panneau">×</button>
+          <div class="sign-preview">{{ preview(sign.content) }}</div>
+          <footer><span>{{ sign.content.length }} caractères</span><strong>{{ copiedId() === sign.id ? 'Copié !' : 'Cliquer pour copier' }}</strong></footer>
+        </article>
+      }
+    </div>
+  }
+</section>

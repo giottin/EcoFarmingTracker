@@ -1,1 +1,9 @@
 
+.field-card { margin: .5rem 1rem; padding: .75rem; border: 1px solid transparent; border-radius: 1rem; transition: background .35s ease, border-color .35s ease, box-shadow .35s ease; }
+.field-growing { border-color: rgba(255, 167, 38, .48); background: linear-gradient(135deg, rgba(255, 152, 0, .2), rgba(90, 55, 9, .16)); box-shadow: inset 4px 0 #ff9d2e; }
+.field-ready { border-color: rgba(102, 187, 106, .5); background: linear-gradient(135deg, rgba(76, 175, 80, .2), rgba(18, 75, 43, .16)); box-shadow: inset 4px 0 #66bb6a; }
+.field-harvested { border-color: rgba(239, 83, 80, .46); background: linear-gradient(135deg, rgba(211, 47, 47, .19), rgba(79, 22, 22, .16)); box-shadow: inset 4px 0 #ef5350; }
+.field-actions, .harvest-action { width: 12rem; margin: 0 1rem; display: flex; flex-direction: column; align-items: stretch; gap: .4rem; text-align: center; }
+.field-actions span, .harvest-action span { color: rgba(255,255,255,.7); font-size: .7rem; }
+.talent-button { font-size: .75rem; line-height: 1.1; }
+@media (max-width: 700px) { .field-card { margin-inline: .5rem; } .field-actions, .harvest-action { width: 100%; margin: .35rem .75rem; } }

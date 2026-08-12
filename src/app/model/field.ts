@@ -31,20 +31,16 @@ export class Field {
     }
   }
 
-  onPlant() {
+  onPlant(growthMultiplier = 1) {
     this.selfRegenFullyGrown.set(false);
-    this.plant();
+    this.plant(growthMultiplier);
   }
 
   onHarvest() {
-    if (this.crop().regenerates()) {
-      this.harvestRegenerating();
-    } else {
-      this.harvest();
-    }
+    this.harvest();
   }
 
-  private plant() {
+  private plant(growthMultiplier = 1) {
     const plantTime = new Date();
     this.plantTime.set(plantTime);
     this.isPlanted.set(true);
@@ -52,7 +48,7 @@ export class Field {
     const plantTimestamp = plantTime.getTime();
     const growthHours = this.crop().growthTime().hours;
     const growthMinutes = this.crop().growthTime().minutes;
-    let additionalMillis = (growthHours * 60 * 60 * 1000) + (growthMinutes * 60 * 1000);
+    let additionalMillis = ((growthHours * 60 * 60 * 1000) + (growthMinutes * 60 * 1000)) * growthMultiplier;
     if (this.selfRegenFullyGrown()) {
       additionalMillis *= 0.5;
     }

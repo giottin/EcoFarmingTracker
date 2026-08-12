@@ -1,5 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {SavedSignsService} from '../service/saved-signs.service';
 
 type Alignment = '' | 'left' | 'center' | 'right';
 
@@ -24,7 +25,11 @@ export class SignGeneratorComponent implements OnInit {
   iconName = '';
   iconNoBackground = false;
   copied = false;
+  saved = false;
+  saving = false;
   readonly palette = ['#FFFFFF', '#FF5252', '#FF9800', '#FFEB3B', '#4CAF50', '#00BCD4', '#2196F3', '#9C27B0', '#E91E63', '#795548'];
+
+  constructor(private readonly savedSigns: SavedSignsService) {}
 
   ngOnInit() { this.restore(); }
 
@@ -78,6 +83,14 @@ export class SignGeneratorComponent implements OnInit {
       this.copied = true;
       window.setTimeout(() => this.copied = false, 2500);
     } catch { this.copied = false; }
+  }
+
+  async saveSign() {
+    if (!this.text.trim() || this.saving) return;
+    this.saving = true;
+    this.saved = await this.savedSigns.add(this.text);
+    this.saving = false;
+    if (this.saved) window.setTimeout(() => this.saved = false, 2500);
   }
 
   reset() {

@@ -19,7 +19,7 @@
           <button type="button" (click)="addLineBreak()" title="Saut de ligne"><span class="material-icons">keyboard_return</span><small>Nouvelle ligne</small></button>
         </div>
         <textarea #editor rows="13" maxlength="4000" [(ngModel)]="text" (ngModelChange)="onTextChange()" spellcheck="false" placeholder="Écris ton texte ici, puis sélectionne les mots à mettre en forme…"></textarea>
-        <div class="editor-footer"><span>{{ text.length }} caractères</span><button type="button" class="copy-button" [disabled]="!text" (click)="copyText()"><span class="material-icons">{{ copied ? 'check' : 'content_copy' }}</span>{{ copied ? 'Texte copié !' : 'Copier tout le texte' }}</button></div>
+        <div class="editor-footer"><span>{{ text.length }} caractères</span><div class="editor-actions"><button type="button" class="save-button" [disabled]="!text.trim() || saving" (click)="saveSign()"><span class="material-icons">{{ saved ? 'check' : 'bookmark_add' }}</span>{{ saved ? 'Panneau sauvegardé !' : (saving ? 'Sauvegarde…' : 'Sauvegarder') }}</button><button type="button" class="copy-button" [disabled]="!text" (click)="copyText()"><span class="material-icons">{{ copied ? 'check' : 'content_copy' }}</span>{{ copied ? 'Texte copié !' : 'Copier tout le texte' }}</button></div></div>
       </article>
 
       <article class="panel options-panel">

@@ -9,8 +9,9 @@ import {AdminPanelComponent} from './admin-panel/admin-panel.component';
 import {FertilizerCalculatorComponent} from './fertilizer-calculator/fertilizer-calculator.component';
 import {SignGeneratorComponent} from './sign-generator/sign-generator.component';
 import {AutomaticFertilizerCalculatorComponent} from './automatic-fertilizer-calculator/automatic-fertilizer-calculator.component';
+import {SavedSignsComponent} from './saved-signs/saved-signs.component';
 
-type Tool = 'fields' | 'fertilizer' | 'signs' | 'automatic-fertilizer';
+type Tool = 'fields' | 'fertilizer' | 'signs' | 'saved-signs' | 'automatic-fertilizer';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,8 @@ type Tool = 'fields' | 'fertilizer' | 'signs' | 'automatic-fertilizer';
     AdminPanelComponent,
     FertilizerCalculatorComponent,
     SignGeneratorComponent,
-    AutomaticFertilizerCalculatorComponent
+    AutomaticFertilizerCalculatorComponent,
+    SavedSignsComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

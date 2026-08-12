@@ -1,4 +1,4 @@
-import {Component, computed, input, output, signal, WritableSignal} from '@angular/core';
+import {Component, computed, input, OnDestroy, output, signal, WritableSignal} from '@angular/core';
 import {Field} from '../../model/field';
 import {MatInputModule} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
@@ -16,11 +16,17 @@ import {Duration} from '../../model/duration';
   templateUrl: './field-row.component.html',
   styleUrl: './field-row.component.scss'
 })
-export class FieldRowComponent {
+export class FieldRowComponent implements OnDestroy {
   field = input.required<Field>();
   sortOrder = input.required<number>();
   rowClosed = output<Field>();
 
+  private readonly now = signal(Date.now());
+  private readonly clock = window.setInterval(() => this.now.set(Date.now()), 1000);
+  readonly fieldStatus = computed<'growing' | 'ready' | 'harvested'>(() => {
+    if (!this.field().isPlanted() || !this.field().harvestTime()) return 'harvested';
+    return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
+  });
   readonly fieldPlaceholder = computed(() => `${this.field().crop().name().split(' ')[0]} Field`);
   readonly displayedGrowthTime = computed(() => {
     let duration = this.field().crop().growthTime();
@@ -65,6 +71,11 @@ export class FieldRowComponent {
     this.save();
   }
 
+  onGentlePlant() {
+    this.field().onPlant(0.8);
+    this.save();
+  }
+
   onHarvest() {
     this.field().onHarvest();
     this.save();
@@ -73,6 +84,8 @@ export class FieldRowComponent {
   private save() {
     this.storageService.saveField(this.field(), this.sortOrder());
   }
+
+  ngOnDestroy() { window.clearInterval(this.clock); }
 
   protected readonly close = close;
 }
