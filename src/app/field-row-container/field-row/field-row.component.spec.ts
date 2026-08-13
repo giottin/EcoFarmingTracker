@@ -25,4 +25,12 @@ describe('FieldRowComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should display the translated harvest button', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const labels = Array.from(element.querySelectorAll('button'))
+      .map(button => button.textContent?.trim());
+    expect(labels).toContain('Récolter');
+    expect(labels).not.toContain('Harvest');
+  });
 });

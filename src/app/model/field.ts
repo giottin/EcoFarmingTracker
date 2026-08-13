@@ -37,7 +37,11 @@ export class Field {
   }
 
   onHarvest() {
-    this.harvest();
+    if (this.crop().regenerates()) {
+      this.harvestRegenerating();
+    } else {
+      this.harvest();
+    }
   }
 
   private plant(growthMultiplier = 1) {
