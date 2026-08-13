@@ -68,23 +68,39 @@ export class SavedSignsComponent implements OnInit {
     const size = normalized.match(/^<size\s*=\s*["']?(\d+)["']?\s*>$/);
     if (size) {
       const level = Math.min(10, Math.max(1, Number(size[1])));
-      const fontSize = (0.78 + level * 0.18).toFixed(2);
-      return `<span style="font-size:${fontSize}em;line-height:1.25">`;
+      const fontSize = (0.75 + level * 0.25).toFixed(2);
+      return `<span style="font-size:${fontSize}em;line-height:1.18">`;
     }
 
     const alignment = normalized.match(/^<align\s*=\s*["']?(left|center|right)["']?\s*>$/);
     if (alignment) return `<span style="display:block;text-align:${alignment[1]}">`;
 
     const shortColor = normalized.match(/^<#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})>$/);
-    if (shortColor) return `<span style="color:#${shortColor[1]}">`;
+    if (shortColor) return `<span style="color:${this.previewColor(shortColor[1])}">`;
 
     const namedColor = normalized.match(/^<color\s*=\s*["']?(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{8}|[a-z]+)["']?\s*>$/);
-    if (namedColor) return `<span style="color:${namedColor[1]}">`;
+    if (namedColor) {
+      const value = namedColor[1];
+      return `<span style="color:${value.startsWith('#') ? this.previewColor(value.slice(1)) : value}">`;
+    }
 
     return `<code style="display:inline-block;margin:.08rem .15rem;padding:.08rem .28rem;border-radius:.25rem;color:#b2dfdb;background:rgba(128,203,196,.12);font-size:.72em">${this.escape(tag)}</code>`;
   }
 
   private escape(value: string): string {
     return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  private previewColor(hex: string): string {
+    if (hex.length !== 8) return `#${hex}`;
+    const red = Number.parseInt(hex.slice(0, 2), 16);
+    const green = Number.parseInt(hex.slice(2, 4), 16);
+    const blue = Number.parseInt(hex.slice(4, 6), 16);
+    const alpha = Number.parseInt(hex.slice(6, 8), 16) / 255;
+
+    // Une opacité ECO très faible reste légèrement visible dans la bibliothèque,
+    // afin que la carte n'efface jamais une ligne de la commande sauvegardée.
+    const previewAlpha = Math.max(0.34, alpha).toFixed(2);
+    return `rgba(${red},${green},${blue},${previewAlpha})`;
   }
 }

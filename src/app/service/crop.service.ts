@@ -28,7 +28,36 @@ export class CropService {
   getCropById(id: string): Crop | undefined {
     return this.allCrops.find(crop => crop.id() === id);
   }
+
+  getDisplayName(crop: Crop): string {
+    return CROP_NAMES_FR[crop.id()] ?? crop.name();
+  }
 }
+
+const CROP_NAMES_FR: Readonly<Record<string, string>> = {
+  agave: 'Agave',
+  beans: 'Haricots',
+  beets: 'Betteraves',
+  bolete: 'Cèpes de Bordeaux',
+  camas: 'Bulbes de camassia',
+  cookeina: 'Cookeina',
+  corn: 'Maïs',
+  cotton: 'Coton',
+  crimini: 'Champignons de Paris',
+  fiddleheads: 'Fougères',
+  fireweed: 'Pousses d’épilobe',
+  flax: 'Lin',
+  huckleberries: 'Myrtilles',
+  papayas: 'Papayes',
+  pineapples: 'Ananas',
+  pears: 'Figues de Barbarie',
+  pumpkins: 'Citrouilles',
+  rice: 'Riz',
+  sunflowers: 'Tournesols',
+  taro: 'Racines de taro',
+  tomatoes: 'Tomates',
+  wheat: 'Blé'
+};
 
 //Duration for all crops that don't automatically regrow
 const baseDuration = new Duration(19, 12);

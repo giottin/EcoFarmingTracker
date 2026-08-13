@@ -25,7 +25,7 @@ export class FieldRowComponent {
     if (!this.field().isPlanted() || !this.field().harvestTime()) return 'harvested';
     return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
   });
-  readonly fieldPlaceholder = computed(() => `${this.field().crop().name().split(' ')[0]} Field`);
+  readonly fieldPlaceholder = computed(() => `Champ ${this.cropDisplayName(this.field().crop())}`);
   readonly maturityLabel = computed(() => {
     const maturity = this.field().harvestTime();
     if (!maturity) return '';
@@ -50,8 +50,12 @@ export class FieldRowComponent {
 
   readonly cropOptions: WritableSignal<Crop[]> = signal([]);
 
-  constructor(cropService: CropService, private storageService: StorageService) {
-    this.cropOptions.set(cropService.allCrops);
+  constructor(private readonly cropService: CropService, private storageService: StorageService) {
+    this.cropOptions.set(this.cropService.allCrops);
+  }
+
+  cropDisplayName(crop: Crop): string {
+    return this.cropService.getDisplayName(crop);
   }
 
   onCropChange(newCrop: Crop) {
