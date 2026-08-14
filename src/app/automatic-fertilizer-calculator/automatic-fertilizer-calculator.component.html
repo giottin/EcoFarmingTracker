@@ -11,6 +11,22 @@
     <label class="soil-input claims"><span>Nombre de claims</span><div><input type="number" min="1" step="1" [(ngModel)]="claims" (ngModelChange)="calculate()"></div></label>
   </div>
 
+  <section class="availability-card">
+    <div>
+      <span class="eyebrow">DISPONIBILITÉ</span>
+      <h3>Difficulté d’obtention des engrais</h3>
+      <p>La valeur 3 est le réglage de départ. Une combinaison proche privilégiera les engrais configurés comme plus faciles, sans jamais interdire les autres.</p>
+    </div>
+    <label class="importance-control">
+      <span>Importance de la disponibilité</span>
+      <select [ngModel]="availabilityImportance" (ngModelChange)="setAvailabilityImportance($event)">
+        @for (option of availabilityOptions; track option.value) {
+          <option [ngValue]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </section>
+
   @if (solution; as result) {
     <article class="result-card">
       <div class="result-heading"><div><span>Meilleur résultat trouvé</span><small>Aucun nutriment ne dépasse 100 %</small></div><div class="score"><strong>{{ format(result.totalDeficit) }}</strong><span>points manquants</span></div></div>
@@ -31,13 +47,21 @@
       <div class="fertilizer-list">
         @for (fertilizer of fertilizers; track fertilizer.name; let index = $index) {
           <article class="fertilizer-row" [class.unused]="quantity(index) === 0">
-            <div><strong>{{ fertilizer.name }}</strong><small>N +{{ fertilizer.nitrogen }} · P +{{ fertilizer.phosphorus }} · K +{{ fertilizer.potassium }}</small></div>
+            <div class="fertilizer-info"><strong>{{ fertilizer.name }}</strong><small>N +{{ fertilizer.nitrogen }} · P +{{ fertilizer.phosphorus }} · K +{{ fertilizer.potassium }}</small></div>
+            <label class="difficulty-control">
+              <span>Difficulté</span>
+              <select [ngModel]="fertilizer.difficulty" (ngModelChange)="setDifficulty(index, $event)" [attr.aria-label]="'Difficulté de ' + fertilizer.name">
+                @for (level of difficultyOptions; track level) {
+                  <option [ngValue]="level">{{ level }}/5 · {{ difficultyLabel(level) }}</option>
+                }
+              </select>
+            </label>
             <div class="quantity"><strong>{{ quantity(index) }}</strong><span>par claim</span></div>
             <div class="quantity total"><strong>{{ totalQuantity(index) }}</strong><span>au total</span></div>
           </article>
         }
       </div>
-      <p class="method"><span class="material-icons">verified</span>Le calcul privilégie d’abord le plus faible déficit total, puis le meilleur équilibre entre les trois nutriments et enfin le plus petit nombre d’engrais.</p>
+      <p class="method"><span class="material-icons">verified</span>Le calcul équilibre la qualité nutritive et la disponibilité choisie. La difficulté est pondérée par la quantité utilisée ; un engrais difficile reste proposé lorsqu’il apporte un gain significatif.</p>
     </section>
   }
 </section>
