@@ -1,6 +1,7 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SavedSignsService} from '../service/saved-signs.service';
+import {ECO_ICON_CATALOG, EcoIconCatalogEntry, ecoIconImageUrl} from './eco-icon-catalog';
 
 type Alignment = '' | 'left' | 'center' | 'right';
 
@@ -24,10 +25,17 @@ export class SignGeneratorComponent implements OnInit {
   selectedAlignment: Alignment = '';
   iconName = '';
   iconNoBackground = false;
+  iconLibraryOpen = false;
+  iconSearch = '';
+  selectedIconCategory = 'Tout';
   copied = false;
   saved = false;
   saving = false;
   readonly palette = ['#FFFFFF', '#FF5252', '#FF9800', '#FFEB3B', '#4CAF50', '#00BCD4', '#2196F3', '#9C27B0', '#E91E63', '#795548'];
+  readonly iconCatalog = ECO_ICON_CATALOG;
+  readonly iconCategories = ['Tout', ...new Set(ECO_ICON_CATALOG.map(icon => icon.category))];
+  readonly iconImageUrl = ecoIconImageUrl;
+  private readonly unavailableImages = new Set<string>();
 
   constructor(private readonly savedSigns: SavedSignsService) {}
 
@@ -51,11 +59,35 @@ export class SignGeneratorComponent implements OnInit {
     if (this.selectedAlignment) this.wrapSelection(`<align=${this.selectedAlignment}>`, '</align>');
   }
 
-  insertIcon() {
-    const name = this.iconName.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+  insertIcon(iconName = this.iconName) {
+    const name = iconName.trim().replace(/[^a-zA-Z0-9_-]/g, '');
     if (!name) return;
     this.insertAtCursor(`<icon name='${name}'${this.iconNoBackground ? ' type="nobg"' : ''}>`);
   }
+
+  openIconLibrary() { this.iconLibraryOpen = true; }
+  closeIconLibrary() { this.iconLibraryOpen = false; }
+  selectIconCategory(category: string) { this.selectedIconCategory = category; }
+  selectCatalogIcon(icon: EcoIconCatalogEntry) {
+    this.iconName = icon.iconName;
+    this.insertIcon(icon.iconName);
+    this.closeIconLibrary();
+  }
+  isIconImageUnavailable(icon: EcoIconCatalogEntry): boolean { return this.unavailableImages.has(icon.id); }
+  markIconImageUnavailable(icon: EcoIconCatalogEntry) { this.unavailableImages.add(icon.id); }
+  iconCommand(icon: EcoIconCatalogEntry): string { return `<icon name='${icon.iconName}'>`; }
+  get filteredIconCatalog(): EcoIconCatalogEntry[] {
+    const query = this.normalize(this.iconSearch);
+    return this.iconCatalog.filter(icon => {
+      const inCategory = this.selectedIconCategory === 'Tout' || icon.category === this.selectedIconCategory;
+      if (!inCategory) return false;
+      if (!query) return true;
+      return this.normalize([icon.name, icon.nameFr, icon.iconName, icon.category, ...icon.keywords].join(' ')).includes(query);
+    });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() { if (this.iconLibraryOpen) this.closeIconLibrary(); }
 
   updateFromHsl() {
     this.color = this.hslToHex(this.hue, this.saturation, this.lightness);
@@ -99,6 +131,8 @@ export class SignGeneratorComponent implements OnInit {
     this.selectedAlignment = '';
     this.iconName = '';
     this.iconNoBackground = false;
+    this.iconSearch = '';
+    this.closeIconLibrary();
     this.save();
     this.focusEditor(0);
   }
@@ -163,6 +197,10 @@ export class SignGeneratorComponent implements OnInit {
     else if (hue < 300) [red, blue] = [x, chroma];
     else [red, blue] = [chroma, x];
     return `#${[red, green, blue].map(value => Math.round((value + m) * 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 
   private save() {

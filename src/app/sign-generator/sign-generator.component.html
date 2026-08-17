@@ -27,7 +27,7 @@
         <div class="option-grid">
           <div class="option-card"><label for="size">Taille du texte</label><div><select id="size" [(ngModel)]="selectedSize"><option value="">Choisir une taille…</option><option value="1">1 — normale</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7 — maximale</option></select><button type="button" (click)="applySize()" [disabled]="!selectedSize">Insérer</button></div></div>
           <div class="option-card"><label for="alignment">Alignement</label><div><select id="alignment" [(ngModel)]="selectedAlignment"><option value="">Choisir un alignement…</option><option value="left">Gauche</option><option value="center">Centre</option><option value="right">Droite</option></select><button type="button" (click)="applyAlignment()" [disabled]="!selectedAlignment">Insérer</button></div></div>
-          <div class="option-card icon-card"><label for="icon">Icône Eco</label><div><input id="icon" type="text" [(ngModel)]="iconName" placeholder="StoneItem"><label class="check-control"><input type="checkbox" [(ngModel)]="iconNoBackground"><span>Sans fond</span></label><button type="button" (click)="insertIcon()" [disabled]="!iconName.trim()">Insérer</button></div></div>
+          <div class="option-card icon-card"><label for="icon">Icône Eco</label><div><input id="icon" type="text" [(ngModel)]="iconName" placeholder="StoneItem"><label class="check-control"><input type="checkbox" [(ngModel)]="iconNoBackground"><span>Sans fond</span></label><button type="button" (click)="insertIcon()" [disabled]="!iconName.trim()">Insérer</button></div><button type="button" class="browse-icons" (click)="openIconLibrary()"><span class="material-icons">apps</span>Parcourir les icônes</button></div>
         </div>
       </article>
     </div>
@@ -49,3 +49,38 @@
     </aside>
   </div>
 </section>
+
+@if (iconLibraryOpen) {
+  <div class="icon-library-backdrop" (click)="closeIconLibrary()">
+    <section class="icon-library" role="dialog" aria-modal="true" aria-labelledby="icon-library-title" (click)="$event.stopPropagation()">
+      <header class="icon-library-header">
+        <div><span class="eyebrow">BIBLIOTHÈQUE ECO</span><h3 id="icon-library-title">Choisir une icône</h3><p>Recherche par nom français, anglais ou identifiant ECO, puis clique sur une image.</p></div>
+        <button type="button" class="close-library" (click)="closeIconLibrary()" aria-label="Fermer la bibliothèque"><span class="material-icons">close</span></button>
+      </header>
+      <label class="icon-search"><span class="material-icons">search</span><input type="search" [(ngModel)]="iconSearch" placeholder="Rechercher une icône…" autofocus></label>
+      <div class="icon-category-filters" aria-label="Catégories d’icônes">
+        @for (category of iconCategories; track category) {
+          <button type="button" [class.active]="selectedIconCategory === category" (click)="selectIconCategory(category)">{{ category }}</button>
+        }
+      </div>
+      <p class="icon-result-count">{{ filteredIconCatalog.length }} icône{{ filteredIconCatalog.length > 1 ? 's' : '' }} disponible{{ filteredIconCatalog.length > 1 ? 's' : '' }}</p>
+      <div class="icon-grid" aria-label="Résultats de la bibliothèque d’icônes">
+        @for (icon of filteredIconCatalog; track icon.id) {
+          <button type="button" class="icon-tile" (click)="selectCatalogIcon(icon)" [title]="icon.nameFr + ' — ' + iconCommand(icon)">
+            <span class="icon-art" [class.fallback]="isIconImageUnavailable(icon)">
+              @if (!isIconImageUnavailable(icon)) {
+                <img [src]="iconImageUrl(icon)" [alt]="icon.nameFr" loading="lazy" (error)="markIconImageUnavailable(icon)">
+              } @else {
+                <span class="material-icons">category</span>
+              }
+            </span>
+            <strong>{{ icon.nameFr }}</strong>
+            <small>{{ icon.iconName }}</small>
+          </button>
+        } @empty {
+          <div class="no-icon-result"><span class="material-icons">search_off</span><p>Aucune icône ne correspond à cette recherche.</p></div>
+        }
+      </div>
+    </section>
+  </div>
+}
