@@ -4,6 +4,7 @@ import {FieldService} from '../service/field.service';
 import {FieldRowComponent} from './field-row/field-row.component';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
+import {FertilizerPlansService} from '../service/fertilizer-plans.service';
 
 @Component({
   selector: 'app-field-row-container',
@@ -23,11 +24,15 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
   private readonly clock = window.setInterval(() => this.now.set(Date.now()), 15000);
   private stopWatching?: () => void;
 
-  constructor(private readonly fieldService: FieldService) {}
+  constructor(
+    private readonly fieldService: FieldService,
+    private readonly fertilizerPlans: FertilizerPlansService
+  ) {}
 
   async ngOnInit() {
     try {
-      this.fields.set(await this.fieldService.getFields());
+      const [fields] = await Promise.all([this.fieldService.getFields(), this.fertilizerPlans.load()]);
+      this.fields.set(fields);
       if (this.fields().length === 0) await this.addRandomField();
       this.stopWatching = this.fieldService.watchFields(() => void this.reloadFields());
     } finally {
@@ -55,6 +60,7 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
 
   private async reloadFields() {
     if (this.fieldService.hasPendingWrites()) return;
-    this.fields.set(await this.fieldService.getFields());
+    const [fields] = await Promise.all([this.fieldService.getFields(), this.fertilizerPlans.load()]);
+    this.fields.set(fields);
   }
 }

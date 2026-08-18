@@ -5,6 +5,7 @@
   </div>
 
   <div class="soil-grid">
+    <label class="soil-input field-name"><span>Champ</span><div><select [(ngModel)]="fieldId" (ngModelChange)="fieldChanged()"><option [ngValue]="null">Choisir un champ…</option>@for (field of fields(); track field.id) { <option [ngValue]="field.id">{{ fieldDisplayName(field) }}</option> }</select></div></label>
     <label class="soil-input nitrogen"><span>Azote actuel <em>N · Nitrogen</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
     <label class="soil-input phosphorus"><span>Phosphore actuel <em>P · Phosphorus</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
     <label class="soil-input potassium"><span>Potassium actuel <em>K · Potassium</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
@@ -29,10 +30,14 @@
         <div><b>K</b><span><strong>Potassium</strong><small>Potassium</small></span></div>
       </div>
       <div class="fertilizer-list">
-        @for (fertilizer of fertilizers; track fertilizer.name; let index = $index) {
+        @for (fertilizer of fertilizers; track fertilizer.key; let index = $index) {
           <article class="fertilizer-row" [class.unused]="quantity(index) === 0" [class.excluded]="!fertilizer.available">
-            <div class="fertilizer-info"><strong>{{ fertilizer.name }}</strong><small>N +{{ fertilizer.nitrogen }} · P +{{ fertilizer.phosphorus }} · K +{{ fertilizer.potassium }}</small></div>
-            <label class="availability-control" [attr.aria-label]="'Utiliser ' + fertilizer.name + ' dans le calcul'">
+            <div class="fertilizer-info">
+              @if (!imageUnavailable(fertilizer.iconName)) { <img [src]="imageUrl(fertilizer.iconName)" [alt]="fertilizer.nameFr" loading="lazy" (error)="markImageUnavailable(fertilizer.iconName)"> }
+              @else { <span class="material-icons fertilizer-fallback">science</span> }
+              <div><strong>{{ fertilizer.label }}</strong><small>N +{{ fertilizer.nitrogen }} · P +{{ fertilizer.phosphorus }} · K +{{ fertilizer.potassium }}</small></div>
+            </div>
+            <label class="availability-control" [attr.aria-label]="'Utiliser ' + fertilizer.label + ' dans le calcul'">
               <input type="checkbox" [ngModel]="fertilizer.available" (ngModelChange)="setAvailability(index, $event)">
               <span>{{ fertilizer.available ? 'Autorisé' : 'Exclu' }}</span>
             </label>
@@ -42,6 +47,13 @@
         }
       </div>
       <p class="method"><span class="material-icons">verified</span>Le calcul recherche la meilleure combinaison parmi les engrais autorisés, sans jamais dépasser 100 %.</p>
+      <div class="save-plan-area">
+        <div><strong>Préparer ce champ</strong><small>Le plan enregistre exactement les quantités affichées ci-dessus.</small></div>
+        <button type="button" class="save-plan-button" (click)="savePlan()" [disabled]="!selectedField() || savingPlan">{{ savingPlan ? 'Enregistrement…' : 'Enregistrer le plan' }}</button>
+      </div>
+      @if (!selectedField()) { <p class="plan-hint">Choisis un champ existant pour pouvoir enregistrer ce calcul.</p> }
+      @if (planSaved) { <p class="plan-success"><span class="material-icons">check_circle</span>Plan enregistré dans « Plans d’engrais ».</p> }
+      @if (planError) { <p class="plan-error">Impossible d’enregistrer ce plan. Réessaie dans un instant.</p> }
     </section>
   }
 </section>

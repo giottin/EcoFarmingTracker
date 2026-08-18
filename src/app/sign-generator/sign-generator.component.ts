@@ -1,7 +1,7 @@
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {SavedSignsService} from '../service/saved-signs.service';
-import {ECO_ICON_CATALOG, EcoIconCatalogEntry, ecoIconImageUrl} from './eco-icon-catalog';
+import type {EcoIconCatalogEntry} from './eco-icon-catalog';
 
 type Alignment = '' | 'left' | 'center' | 'right';
 
@@ -26,15 +26,14 @@ export class SignGeneratorComponent implements OnInit {
   iconName = '';
   iconNoBackground = false;
   iconLibraryOpen = false;
+  iconCatalogLoading = false;
   iconSearch = '';
   selectedIconCategory = 'Tout';
   copied = false;
   saved = false;
   saving = false;
   readonly palette = ['#FFFFFF', '#FF5252', '#FF9800', '#FFEB3B', '#4CAF50', '#00BCD4', '#2196F3', '#9C27B0', '#E91E63', '#795548'];
-  readonly iconCatalog = ECO_ICON_CATALOG;
-  readonly iconCategories = ['Tout', ...new Set(ECO_ICON_CATALOG.map(icon => icon.category))];
-  readonly iconImageUrl = ecoIconImageUrl;
+  iconCatalog: readonly EcoIconCatalogEntry[] = [];
   private readonly unavailableImages = new Set<string>();
 
   constructor(private readonly savedSigns: SavedSignsService) {}
@@ -65,7 +64,14 @@ export class SignGeneratorComponent implements OnInit {
     this.insertAtCursor(`<icon name='${name}'${this.iconNoBackground ? ' type="nobg"' : ''}>`);
   }
 
-  openIconLibrary() { this.iconLibraryOpen = true; }
+  async openIconLibrary() {
+    this.iconLibraryOpen = true;
+    if (this.iconCatalog.length || this.iconCatalogLoading) return;
+    this.iconCatalogLoading = true;
+    const {ECO_ICON_CATALOG} = await import('./eco-icon-catalog');
+    this.iconCatalog = ECO_ICON_CATALOG;
+    this.iconCatalogLoading = false;
+  }
   closeIconLibrary() { this.iconLibraryOpen = false; }
   selectIconCategory(category: string) { this.selectedIconCategory = category; }
   selectCatalogIcon(icon: EcoIconCatalogEntry) {
@@ -76,6 +82,8 @@ export class SignGeneratorComponent implements OnInit {
   isIconImageUnavailable(icon: EcoIconCatalogEntry): boolean { return this.unavailableImages.has(icon.id); }
   markIconImageUnavailable(icon: EcoIconCatalogEntry) { this.unavailableImages.add(icon.id); }
   iconCommand(icon: EcoIconCatalogEntry): string { return `<icon name='${icon.iconName}'>`; }
+  iconImageUrl(icon: EcoIconCatalogEntry): string { return 'https://wiki.play.eco/en/Special:Redirect/file/' + encodeURIComponent(icon.iconName + '_Icon.png'); }
+  get iconCategories(): string[] { return ['Tout', ...new Set(this.iconCatalog.map(icon => icon.category))]; }
   get filteredIconCatalog(): EcoIconCatalogEntry[] {
     const query = this.normalize(this.iconSearch);
     return this.iconCatalog.filter(icon => {

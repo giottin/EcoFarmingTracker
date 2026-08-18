@@ -8,6 +8,8 @@ app-field-row {
 .status-legend .growing { background: #ff9d2e; }
 .status-legend .ready { background: #66bb6a; }
 .status-legend .harvested { background: #ef5350; }
+.status-legend .fertilizing { background: #ce93d8; }
+.status-legend small { color: rgba(255,255,255,.45); font-size: .65rem; }
 
 .loading-state {
   margin: 3rem 1rem;

@@ -1,0 +1,17 @@
+<section class="plans-shell">
+  <header><span class="eyebrow">PRÉPARATIONS PARTAGÉES</span><h2>Plans d’engrais</h2><p>Retrouve en un coup d’œil les quantités exactes à préparer pour tous tes champs.</p></header>
+  @if (fertilizerPlans.loading()) { <p class="state">Chargement des plans…</p> }
+  @else if (fertilizerPlans.plans().length === 0) { <div class="empty-state"><span class="material-icons">assignment</span><h3>Aucun plan enregistré</h3><p>Calcule un champ dans « Engrais automatique », puis utilise « Enregistrer le plan ».</p></div> }
+  @else { <div class="plan-grid">
+    @for (plan of fertilizerPlans.plans(); track plan.id) { <article class="plan-card">
+      <button type="button" class="delete-plan" (click)="remove(plan)" aria-label="Supprimer ce plan">×</button>
+      <header class="plan-heading"><div><h3>{{ fieldName(plan) }}</h3><span>{{ plan.claims }} claim{{ plan.claims > 1 ? 's' : '' }}</span></div><div class="soil-summary" title="Nutriments de départ">N {{ format(plan.nutrients.nitrogen) }} · P {{ format(plan.nutrients.phosphorus) }} · K {{ format(plan.nutrients.potassium) }}</div></header>
+      @if (plan.lines.length > 0) { <div class="plan-lines">
+        @for (line of plan.lines; track line.key) { <div class="plan-line">
+          @if (!imageUnavailable(line.iconName)) { <img [src]="imageUrl(line.iconName)" [alt]="line.label" loading="lazy" (error)="markImageUnavailable(line.iconName)"> } @else { <span class="material-icons image-fallback">science</span> }
+          <strong>{{ line.label }}</strong><span><b>{{ format(line.total) }}</b> total · {{ format(line.perClaim) }}/claim</span>
+        </div> }
+      </div> } @else { <p class="no-fertilizer">Aucun engrais nécessaire.</p> }
+    </article> }
+  </div> }
+</section>

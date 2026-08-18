@@ -3,6 +3,8 @@
 .field-growing { border-color: rgba(255, 167, 38, .48); background: linear-gradient(135deg, rgba(255, 152, 0, .2), rgba(90, 55, 9, .16)); box-shadow: inset 4px 0 #ff9d2e; }
 .field-ready { border-color: rgba(102, 187, 106, .5); background: linear-gradient(135deg, rgba(76, 175, 80, .2), rgba(18, 75, 43, .16)); box-shadow: inset 4px 0 #66bb6a; }
 .field-harvested { border-color: rgba(239, 83, 80, .46); background: linear-gradient(135deg, rgba(211, 47, 47, .19), rgba(79, 22, 22, .16)); box-shadow: inset 4px 0 #ef5350; }
+.field-fertilizing { border-color: rgba(206, 147, 216, .62); background: linear-gradient(135deg, rgba(156, 39, 176, .24), rgba(68, 27, 74, .2)); box-shadow: inset 4px 0 #ce93d8; }
+.field-fertilizer-pending:not(.field-fertilizing) { border-color: rgba(206, 147, 216, .62); outline: 1px solid rgba(206,147,216,.35); outline-offset: -1px; }
 .field-actions, .harvest-action { width: 12rem; margin: 0 1rem; display: flex; flex-direction: column; align-items: stretch; gap: .4rem; text-align: center; }
 .field-actions span, .harvest-action span { color: rgba(255,255,255,.7); font-size: .7rem; }
 .maturity-panel { display: flex; flex: 1 1 15rem; min-width: 14rem; margin: .45rem .75rem; padding: .65rem .85rem; flex-direction: column; justify-content: center; border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; background: rgba(7,18,19,.42); }
@@ -12,6 +14,10 @@
 .maturity-panel .material-icons { color: #ffb74d; font-size: 1rem; }
 .field-ready .maturity-panel .material-icons, .field-ready .maturity-panel strong { color: #a5d6a7; }
 .field-harvested .maturity-panel strong { color: #ef9a9a; }
+.field-fertilizing .maturity-panel strong { color: #e1bee7; }
+.fertilizer-badge { display: inline-flex; width: fit-content; align-items: center; gap: .25rem; margin-top: .45rem; padding: .27rem .45rem; border: 1px solid rgba(206,147,216,.65); border-radius: 999px; color: #f3e5f5 !important; background: rgba(156,39,176,.25); font-size: .7rem !important; font-weight: 800; letter-spacing: 0 !important; text-transform: none !important; }
+.fertilizer-badge .material-icons { color: #e1bee7 !important; font-size: .9rem !important; }
+.fertilize-button { border-color: rgba(206,147,216,.65) !important; color: #e1bee7 !important; background: rgba(156,39,176,.16) !important; }
 .talent-button { font-size: .75rem; line-height: 1.1; }
 @media (max-width: 900px) { .maturity-panel { order: 3; flex-basis: calc(100% - 1.5rem); } .field-actions, .harvest-action { flex: 1 1 10rem; width: auto; } }
 @media (max-width: 700px) { .field-card { margin-inline: .5rem; } .maturity-panel { min-width: 0; } .field-actions, .harvest-action { width: 100%; margin: .35rem .75rem; } }

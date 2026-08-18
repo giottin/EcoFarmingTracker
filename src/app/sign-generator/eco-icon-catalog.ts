@@ -1,12 +1,7 @@
-export type EcoIconCategory =
-  | 'Spécialités'
-  | 'Ressources'
-  | 'Agriculture'
-  | 'Nourriture'
-  | 'Matériaux'
-  | 'Machines'
-  | 'Véhicules'
-  | 'Outils';
+import {ECO_ITEM_RECORDS} from './eco-icon-items.generated';
+import {ECO_SKILL_RECORDS} from './eco-icon-skills.generated';
+
+export type EcoIconCategory = string;
 
 export interface EcoIconCatalogEntry {
   id: string;
@@ -144,7 +139,15 @@ const ICON_SEEDS: readonly IconSeed[] = [
   ['Scythe', 'Faux', 'ScytheItem', 'Outils', 'scythe', 'faux']
 ];
 
-export const ECO_ICON_CATALOG = ICON_SEEDS.map(entry);
+const MANUAL_ICON_ENTRIES = ICON_SEEDS.map(entry);
+
+// The generated records are the source of truth for exact IDs and translations.
+// The compact manual set remains only as a small compatibility supplement.
+export const ECO_ICON_CATALOG: readonly EcoIconCatalogEntry[] = [
+  ...ECO_SKILL_RECORDS,
+  ...ECO_ITEM_RECORDS,
+  ...MANUAL_ICON_ENTRIES
+].filter((icon, index, all) => all.findIndex(candidate => candidate.id === icon.id) === index);
 
 export const ecoIconImageUrl = (icon: EcoIconCatalogEntry): string =>
   `https://wiki.play.eco/en/Special:Redirect/file/${encodeURIComponent(`${icon.iconName}_Icon.png`)}`;

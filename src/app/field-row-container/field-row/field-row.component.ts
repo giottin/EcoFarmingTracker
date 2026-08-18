@@ -8,6 +8,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {StorageService} from '../../service/storage.service';
+import {FertilizerPlansService} from '../../service/fertilizer-plans.service';
 
 @Component({
   selector: 'app-field-row',
@@ -21,8 +22,10 @@ export class FieldRowComponent {
   now = input.required<number>();
   rowClosed = output<Field>();
 
-  readonly fieldStatus = computed<'growing' | 'ready' | 'harvested'>(() => {
-    if (!this.field().isPlanted() || !this.field().harvestTime()) return 'harvested';
+  readonly activeFertilizerPlan = computed(() => this.fertilizerPlans.plans().find(plan => plan.fieldId === this.field().id) ?? null);
+  readonly needsFertilizing = computed(() => this.activeFertilizerPlan() !== null);
+  readonly fieldStatus = computed<'growing' | 'ready' | 'harvested' | 'fertilizing'>(() => {
+    if (!this.field().isPlanted() || !this.field().harvestTime()) return this.needsFertilizing() ? 'fertilizing' : 'harvested';
     return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
   });
   readonly fieldPlaceholder = computed(() => `Champ ${this.cropDisplayName(this.field().crop())}`);
@@ -50,7 +53,11 @@ export class FieldRowComponent {
 
   readonly cropOptions: WritableSignal<Crop[]> = signal([]);
 
-  constructor(private readonly cropService: CropService, private storageService: StorageService) {
+  constructor(
+    private readonly cropService: CropService,
+    private readonly storageService: StorageService,
+    private readonly fertilizerPlans: FertilizerPlansService
+  ) {
     this.cropOptions.set(this.cropService.allCrops);
   }
 
@@ -84,6 +91,10 @@ export class FieldRowComponent {
   onHarvest() {
     this.field().onHarvest();
     this.save();
+  }
+
+  async onFertilize() {
+    await this.fertilizerPlans.completeForField(this.field().id);
   }
 
   private save() {

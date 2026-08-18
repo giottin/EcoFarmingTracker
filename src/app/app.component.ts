@@ -6,12 +6,12 @@ import {AccessState, AuthService} from './service/auth.service';
 import {SettingsService} from './service/settings.service';
 import {MatButtonModule} from '@angular/material/button';
 import {AdminPanelComponent} from './admin-panel/admin-panel.component';
-import {FertilizerCalculatorComponent} from './fertilizer-calculator/fertilizer-calculator.component';
 import {SignGeneratorComponent} from './sign-generator/sign-generator.component';
 import {AutomaticFertilizerCalculatorComponent} from './automatic-fertilizer-calculator/automatic-fertilizer-calculator.component';
 import {SavedSignsComponent} from './saved-signs/saved-signs.component';
+import {FertilizerPlansComponent} from './fertilizer-plans/fertilizer-plans.component';
 
-type Tool = 'fields' | 'fertilizer' | 'signs' | 'saved-signs' | 'automatic-fertilizer';
+type Tool = 'fields' | 'signs' | 'saved-signs' | 'automatic-fertilizer' | 'fertilizer-plans';
 
 @Component({
   selector: 'app-root',
@@ -21,10 +21,10 @@ type Tool = 'fields' | 'fertilizer' | 'signs' | 'saved-signs' | 'automatic-ferti
     LoginComponent,
     MatButtonModule,
     AdminPanelComponent,
-    FertilizerCalculatorComponent,
     SignGeneratorComponent,
     AutomaticFertilizerCalculatorComponent,
-    SavedSignsComponent
+    SavedSignsComponent,
+    FertilizerPlansComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

@@ -64,6 +64,7 @@
         }
       </div>
       <p class="icon-result-count">{{ filteredIconCatalog.length }} icône{{ filteredIconCatalog.length > 1 ? 's' : '' }} disponible{{ filteredIconCatalog.length > 1 ? 's' : '' }}</p>
+      @if (iconCatalogLoading) { <p class="icon-result-count">Chargement de la bibliothèque ECO…</p> }
       <div class="icon-grid" aria-label="Résultats de la bibliothèque d’icônes">
         @for (icon of filteredIconCatalog; track icon.id) {
           <button type="button" class="icon-tile" (click)="selectCatalogIcon(icon)" [title]="icon.nameFr + ' — ' + iconCommand(icon)">

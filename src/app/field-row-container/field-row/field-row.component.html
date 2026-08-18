@@ -1,7 +1,7 @@
-<div class="field-card" [class.field-growing]="fieldStatus() === 'growing'" [class.field-ready]="fieldStatus() === 'ready'" [class.field-harvested]="fieldStatus() === 'harvested'">
+<div class="field-card" [class.field-growing]="fieldStatus() === 'growing'" [class.field-ready]="fieldStatus() === 'ready'" [class.field-harvested]="fieldStatus() === 'harvested'" [class.field-fertilizing]="fieldStatus() === 'fertilizing'" [class.field-fertilizer-pending]="needsFertilizing()">
   <form class="flex flex-wrap items-center">
     <mat-form-field appearance="outline" floatLabel="always" class="m-3 flex-1 min-w-48">
-      <mat-label>Field Name</mat-label>
+      <mat-label>Nom du champ</mat-label>
       <input matInput type="text" name="field-name"
              [placeholder]="fieldPlaceholder()"
              [ngModel]="field().name()"
@@ -9,7 +9,7 @@
              class="placeholder:opacity-70">
     </mat-form-field>
     <mat-form-field appearance="outline" floatLabel="always" class="m-3 flex-1 min-w-40">
-      <mat-label>Crop</mat-label>
+      <mat-label>Culture</mat-label>
       <mat-select name="field-crop"
                   [ngModel]="field().crop()"
                   (ngModelChange)="onCropChange($event)"
@@ -31,19 +31,26 @@
           <strong>Prêt à récolter</strong>
           <small>Depuis le {{ maturityLabel() }}</small>
         }
+        @case ('fertilizing') {
+          <span>Action nécessaire</span>
+          <strong>À fertiliser</strong>
+          <small>Applique le plan avant de replanter</small>
+        }
         @default {
           <span>État du champ</span>
           <strong>À replanter</strong>
           <small>Aucune culture en pousse</small>
         }
       }
+      @if (needsFertilizing() && fieldStatus() !== 'fertilizing') { <span class="fertilizer-badge"><span class="material-icons">science</span>À fertiliser</span> }
     </div>
     <div class="field-actions">
-      <button type="button" mat-stroked-button (click)="onPlant()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
-      <button type="button" mat-stroked-button class="talent-button" (click)="onGentlePlant()" title="Gentle Seeding : commence à 20 % de maturité">Replanter + talent</button>
+      <button type="button" mat-stroked-button (click)="onPlant()" [disabled]="needsFertilizing() && !field().isPlanted()">{{ field().isPlanted() ? 'Replant' : 'Plant' }}</button>
+      <button type="button" mat-stroked-button class="talent-button" (click)="onGentlePlant()" [disabled]="needsFertilizing() && !field().isPlanted()" title="Gentle Seeding : commence à 20 % de maturité">Replanter + talent</button>
     </div>
     <div class="harvest-action">
       <button type="button" mat-stroked-button (click)="onHarvest()" [disabled]="!field().isPlanted()">Récolter</button>
+      @if (needsFertilizing()) { <button type="button" mat-stroked-button class="fertilize-button" (click)="onFertilize()">Fertiliser</button> }
     </div>
     <div class="mx-2 flex items-center">
       <span class="material-icons cursor-pointer hover:opacity-80" (click)="rowClosed.emit(field())">close</span>
