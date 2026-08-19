@@ -9,6 +9,7 @@
         <button type="button" [class.active]="activeTool() === 'saved-signs'" (click)="selectTool('saved-signs')"><span class="material-icons">bookmarks</span>Mes panneaux</button>
         <button type="button" [class.active]="activeTool() === 'automatic-fertilizer'" (click)="selectTool('automatic-fertilizer')"><span class="material-icons">auto_awesome</span>Engrais automatique</button>
         <button type="button" [class.active]="activeTool() === 'fertilizer-plans'" (click)="selectTool('fertilizer-plans')"><span class="material-icons">assignment</span>Plans d’engrais</button>
+        <button type="button" [class.active]="activeTool() === 'calorie-calculator'" (click)="selectTool('calorie-calculator')"><span class="material-icons">local_dining</span>Coût calorique</button>
       </nav>
       <main class="flex-1">
         @if (auth.isAdmin()) { <app-admin-panel></app-admin-panel> }
@@ -18,6 +19,7 @@
           @case ('saved-signs') { <app-saved-signs></app-saved-signs> }
           @case ('automatic-fertilizer') { <app-automatic-fertilizer-calculator></app-automatic-fertilizer-calculator> }
           @case ('fertilizer-plans') { <app-fertilizer-plans></app-fertilizer-plans> }
+          @case ('calorie-calculator') { <app-calorie-calculator></app-calorie-calculator> }
         }
       </main>
     </div>

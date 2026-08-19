@@ -1,5 +1,6 @@
 import {ECO_ITEM_RECORDS} from './eco-icon-items.generated';
 import {ECO_SKILL_RECORDS} from './eco-icon-skills.generated';
+import {ecoItemImageUrl} from '../eco-data/eco-item-image';
 
 export type EcoIconCategory = string;
 
@@ -150,4 +151,4 @@ export const ECO_ICON_CATALOG: readonly EcoIconCatalogEntry[] = [
 ].filter((icon, index, all) => all.findIndex(candidate => candidate.id === icon.id) === index);
 
 export const ecoIconImageUrl = (icon: EcoIconCatalogEntry): string =>
-  `https://wiki.play.eco/en/Special:Redirect/file/${encodeURIComponent(`${icon.iconName}_Icon.png`)}`;
+  ecoItemImageUrl(icon.iconName);

@@ -4,12 +4,34 @@
     <button type="button" class="reset-button" (click)="reset()"><span class="material-icons">restart_alt</span>Réinitialiser</button>
   </div>
 
-  <div class="soil-grid">
-    <label class="soil-input field-name"><span>Champ</span><div><select [(ngModel)]="fieldId" (ngModelChange)="fieldChanged()"><option [ngValue]="null">Choisir un champ…</option>@for (field of fields(); track field.id) { <option [ngValue]="field.id">{{ fieldDisplayName(field) }}</option> }</select></div></label>
+  <div class="field-context-grid">
+    <div class="field-picker">
+      <span>Champ sélectionné</span>
+      <mat-form-field appearance="outline">
+        <mat-select [ngModel]="fieldId()" (ngModelChange)="fieldChanged($event)" aria-label="Champ sélectionné">
+          <mat-select-trigger>@if (selectedField(); as selected) { <span class="field-option">@if (!cropIconUnavailable(selected)) { <img [src]="cropIconUrl(selected)" [alt]="''"> } @else { <span class="material-icons">grass</span> }<span>{{ fieldDisplayName(selected) }}</span></span> } @else { Choisir un champ… }</mat-select-trigger>
+          <mat-option [value]="null">Choisir un champ…</mat-option>
+          @for (field of fields(); track field.id) {
+            <mat-option [value]="field.id"><span class="field-option">@if (!cropIconUnavailable(field)) { <img [src]="cropIconUrl(field)" [alt]="''" (error)="markCropIconUnavailable(field)"> } @else { <span class="material-icons">grass</span> }<span>{{ fieldDisplayName(field) }}<small>{{ fieldCropName(field) }}</small></span></span></mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div class="field-size-summary" [class.unset]="!selectedField()?.plantCount()">
+      <span>Taille du champ</span>
+      @if (selectedField(); as field) {
+        <strong>{{ field.plantCount() ? field.plantCount() + ' plantes' : 'À renseigner' }}</strong>
+        <small>@if (claims(); as calculatedClaims) { {{ calculatedClaims }} {{ calculatedClaims > 1 ? 'claims' : 'claim' }} · arrondi au supérieur } @else { Renseigne la taille dans « Suivi des champs » }</small>
+      } @else {
+        <strong>—</strong><small>Choisis un champ pour récupérer sa taille.</small>
+      }
+    </div>
+  </div>
+
+  <div class="soil-grid nutrient-inputs">
     <label class="soil-input nitrogen"><span>Azote actuel <em>N · Nitrogen</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
     <label class="soil-input phosphorus"><span>Phosphore actuel <em>P · Phosphorus</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
     <label class="soil-input potassium"><span>Potassium actuel <em>K · Potassium</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
-    <label class="soil-input claims"><span>Nombre de claims</span><div><input type="number" min="1" step="1" [(ngModel)]="claims" (ngModelChange)="calculate()"></div></label>
   </div>
 
   @if (solution; as result) {
@@ -23,7 +45,7 @@
     </article>
 
     <section class="recommendation">
-      <div class="section-title"><div><h3>Engrais à appliquer</h3><p>Coche uniquement les engrais réellement disponibles. Le résultat se met à jour immédiatement.</p></div><div class="total-pill"><strong>{{ result.total * claims }}</strong><span>engrais au total</span></div></div>
+      <div class="section-title"><div><h3>Engrais à appliquer</h3><p>Coche uniquement les engrais réellement disponibles. Le résultat se met à jour immédiatement.</p></div><div class="total-pill"><strong>{{ result.total * (claims() ?? 0) }}</strong><span>engrais au total</span></div></div>
       <div class="nutrient-legend" aria-label="Correspondance des nutriments N, P et K">
         <div><b>N</b><span><strong>Azote</strong><small>Nitrogen</small></span></div>
         <div><b>P</b><span><strong>Phosphore</strong><small>Phosphorus</small></span></div>
@@ -49,9 +71,10 @@
       <p class="method"><span class="material-icons">verified</span>Le calcul recherche la meilleure combinaison parmi les engrais autorisés, sans jamais dépasser 100 %.</p>
       <div class="save-plan-area">
         <div><strong>Préparer ce champ</strong><small>Le plan enregistre exactement les quantités affichées ci-dessus.</small></div>
-        <button type="button" class="save-plan-button" (click)="savePlan()" [disabled]="!selectedField() || savingPlan">{{ savingPlan ? 'Enregistrement…' : 'Enregistrer le plan' }}</button>
+        <button type="button" class="save-plan-button" (click)="savePlan()" [disabled]="!selectedField() || !claims() || savingPlan">{{ savingPlan ? 'Enregistrement…' : 'Enregistrer le plan' }}</button>
       </div>
       @if (!selectedField()) { <p class="plan-hint">Choisis un champ existant pour pouvoir enregistrer ce calcul.</p> }
+      @else if (!claims()) { <p class="plan-hint">Renseigne la taille de ce champ dans « Suivi des champs » : elle permet de calculer le nombre exact de claims.</p> }
       @if (planSaved) { <p class="plan-success"><span class="material-icons">check_circle</span>Plan enregistré dans « Plans d’engrais ».</p> }
       @if (planError) { <p class="plan-error">Impossible d’enregistrer ce plan. Réessaie dans un instant.</p> }
     </section>

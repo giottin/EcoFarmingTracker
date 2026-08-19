@@ -1,0 +1,86 @@
+<section class="calorie-shell">
+  @if (activeStore(); as store) {
+    <div class="store-toolbar">
+      <button type="button" class="back-button" (click)="closeStore()"><span class="material-icons">arrow_back</span>Magasins</button>
+      <label class="store-name-input"><span>Nom du magasin</span><input type="text" maxlength="120" [ngModel]="store.name" (ngModelChange)="renameStore(store, $event)" placeholder="Nom du magasin"></label>
+      <button type="button" class="delete-button" (click)="deleteStore(store)"><span class="material-icons">delete_outline</span><span>Supprimer</span></button>
+    </div>
+
+    <div class="calorie-heading compact">
+      <div><span class="eyebrow">MAGASIN ALIMENTAIRE</span><h2>Coût calorique</h2><p>Modifie un prix : tous les calculs se mettent à jour instantanément.</p></div>
+      <article class="recommended-cost" [class.empty]="!activeMetrics()">
+        <span>Coût calorique recommandé</span>
+        <strong>{{ formatCost(activeMetrics()?.median) }} <small>/ 1 000 kcal</small></strong>
+        <button type="button" (click)="copyRecommended()" [disabled]="!activeMetrics()"><span class="material-icons">content_copy</span>{{ copied() ? 'Copié' : 'Copier' }}</button>
+      </article>
+    </div>
+
+    <section class="food-editor">
+      <div class="food-search">
+        <label for="food-search">Ajouter un aliment</label>
+        <div class="search-control"><span class="material-icons">search</span><input id="food-search" type="search" autocomplete="off" placeholder="Rechercher un aliment…" [ngModel]="search()" (ngModelChange)="search.set($event)"></div>
+        @if (suggestions().length) {
+          <div class="suggestions" role="listbox">
+            @for (food of suggestions(); track food.id) {
+              <button type="button" (click)="addFood(food)">
+                @if (!iconUnavailable(food.iconName)) { <img [src]="imageUrl(food.iconName)" [alt]="''" loading="lazy" (error)="markIconUnavailable(food.iconName)"> }
+                @else { <span class="material-icons food-fallback">restaurant</span> }
+                <span><strong>{{ food.nameFr }}</strong>@if (food.nameFr !== food.name) { <small>{{ food.name }}</small> }</span><b>{{ food.calories }} kcal</b>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="calorie-secondary">
+        <span>Moyenne simple <b>{{ formatCost(activeMetrics()?.average) }}</b></span>
+        <span>Coût global <b>{{ formatCost(activeMetrics()?.global) }}</b></span>
+      </div>
+    </section>
+
+    @if (store.foods.length) {
+      <div class="food-list">
+        @for (storedFood of store.foods; track storedFood.id) {
+          @if (foodFor(storedFood); as food) {
+            <article class="food-row">
+              <div class="food-identity">
+                @if (!iconUnavailable(food.iconName)) { <img [src]="imageUrl(food.iconName)" [alt]="food.nameFr" loading="lazy" (error)="markIconUnavailable(food.iconName)"> }
+                @else { <span class="material-icons food-fallback">restaurant</span> }
+                <div><strong>{{ food.nameFr }}</strong>@if (food.nameFr !== food.name) { <small>{{ food.name }}</small> }<span>{{ food.calories }} kcal</span></div>
+              </div>
+              <label class="price-input"><span>Prix</span><input type="number" min="0" step="0.01" inputmode="decimal" [ngModel]="storedFood.price" (ngModelChange)="setPrice(storedFood, $event)" placeholder="—"></label>
+              <div class="food-cost"><span>Pour 1 000 kcal</span><strong>{{ formatCost(costFor(storedFood)) }}</strong></div>
+              <button type="button" class="remove-food" (click)="removeFood(storedFood)" [attr.aria-label]="'Retirer ' + food.nameFr"><span class="material-icons">close</span></button>
+            </article>
+          } @else {
+            <article class="food-row missing-food"><div class="food-identity"><span class="material-icons food-fallback">help_outline</span><div><strong>Aliment non reconnu</strong><small>Conserve son prix enregistré, mais les données Eco doivent être mises à jour.</small></div></div><button type="button" class="remove-food" (click)="removeFood(storedFood)"><span class="material-icons">close</span></button></article>
+          }
+        }
+      </div>
+    } @else {
+      <div class="empty-foods"><span class="material-icons">restaurant_menu</span><strong>Ajoute les aliments vendus dans ce magasin</strong><p>Recherche un aliment, puis renseigne directement son prix.</p></div>
+    }
+  } @else {
+    <div class="calorie-heading">
+      <div><span class="eyebrow">ÉCONOMIE ALIMENTAIRE</span><h2>Calculateur du coût calorique</h2><p>Compare le prix réel de la nourriture vendue sur le serveur, pour 1 000 calories.</p></div>
+      <button type="button" class="new-store-button" (click)="createStore()"><span class="material-icons">add</span>Nouveau magasin</button>
+    </div>
+
+    @if (loading()) { <div class="loading-state">Chargement des magasins…</div> }
+    @else if (stores().length) {
+      <div class="store-grid">
+        @for (store of stores(); track store.id) {
+          <article class="store-card">
+            <div class="store-card-top"><span class="material-icons">storefront</span><button type="button" class="icon-delete" (click)="deleteStore(store)" [attr.aria-label]="'Supprimer ' + storeName(store)"><span class="material-icons">delete_outline</span></button></div>
+            <input class="store-card-name" type="text" maxlength="120" [ngModel]="store.name" (ngModelChange)="renameStore(store, $event)" placeholder="Nom du magasin" aria-label="Nom du magasin">
+            <p>{{ store.foods.length }} {{ store.foods.length > 1 ? 'aliments enregistrés' : 'aliment enregistré' }}</p>
+            <div class="store-card-cost"><span>Coût recommandé</span><strong>{{ formatCost(metricsFor(store.foods)?.median) }} <small>/ 1 000 kcal</small></strong></div>
+            <button type="button" class="open-store" (click)="openStore(store)">Ouvrir / modifier<span class="material-icons">arrow_forward</span></button>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="empty-stores"><span class="material-icons">storefront</span><h3>Crée ton premier magasin</h3><p>Enregistre ses aliments et leurs prix pour obtenir une référence calorique à copier dans EcoGnome.</p><button type="button" class="new-store-button" (click)="createStore()"><span class="material-icons">add</span>Nouveau magasin</button></div>
+    }
+  }
+</section>

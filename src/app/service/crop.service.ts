@@ -2,6 +2,7 @@ import {effect, Injectable} from '@angular/core';
 import {Crop} from '../model/crop';
 import {SettingsService} from './settings.service';
 import {Duration} from '../model/duration';
+import {ecoItemImageUrl} from '../eco-data/eco-item-image';
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +32,10 @@ export class CropService {
 
   getDisplayName(crop: Crop): string {
     return CROP_NAMES_FR[crop.id()] ?? crop.name();
+  }
+
+  getIconUrl(crop: Crop): string {
+    return ecoItemImageUrl(crop.iconName);
   }
 }
 
@@ -66,26 +71,26 @@ const baseDuration = new Duration(19, 12);
 const regrowableDuration = new Duration(28, 48);
 
 const ALL_CROPS: Crop[] = [
-  new Crop('agave', 'Agave', false, baseDuration),
-  new Crop('beans', 'Beans', false, baseDuration),
-  new Crop('beets', 'Beets', false, baseDuration),
-  new Crop('bolete', 'Bolete Mushrooms', false, baseDuration),
-  new Crop('camas', 'Camas Bulbs', false, baseDuration),
-  new Crop('cookeina', 'Cookeina Mushrooms', false, baseDuration),
-  new Crop('corn', 'Corn', false, baseDuration),
-  new Crop('cotton', 'Cotton', true, regrowableDuration),
-  new Crop('crimini', 'Crimini Mushrooms', false, baseDuration),
-  new Crop('fiddleheads', 'Fiddleheads', false, baseDuration),
-  new Crop('fireweed', 'Fireweed Shoots', false, baseDuration),
-  new Crop('flax', 'Flax', false, baseDuration),
-  new Crop('huckleberries', 'Huckleberries', true, regrowableDuration),
-  new Crop('papayas', 'Papayas', true, regrowableDuration),
-  new Crop('pineapples', 'Pineapples', true, regrowableDuration),
-  new Crop('pears', 'Prickly Pears', true, regrowableDuration),
-  new Crop('pumpkins', 'Pumpkins', false, baseDuration),
-  new Crop('rice', 'Rice', false, baseDuration),
-  new Crop('sunflowers', 'Sunflowers', false, baseDuration),
-  new Crop('taro', 'Taro Roots', false, baseDuration),
-  new Crop('tomatoes', 'Tomatoes', true, regrowableDuration),
-  new Crop('wheat', 'Wheat', false, baseDuration)
+  new Crop('agave', 'Agave', false, baseDuration, 'AgaveItem'),
+  new Crop('beans', 'Beans', false, baseDuration, 'BeansItem'),
+  new Crop('beets', 'Beets', false, baseDuration, 'BeetItem'),
+  new Crop('bolete', 'Bolete Mushrooms', false, baseDuration, 'BoleteMushroomsItem'),
+  new Crop('camas', 'Camas Bulbs', false, baseDuration, 'CamasBulbItem'),
+  new Crop('cookeina', 'Cookeina Mushrooms', false, baseDuration, 'CookeinaMushroomsItem'),
+  new Crop('corn', 'Corn', false, baseDuration, 'CornItem'),
+  new Crop('cotton', 'Cotton', true, regrowableDuration, 'CottonItem'),
+  new Crop('crimini', 'Crimini Mushrooms', false, baseDuration, 'CriminiMushroomsItem'),
+  new Crop('fiddleheads', 'Fiddleheads', false, baseDuration, 'FiddleheadsItem'),
+  new Crop('fireweed', 'Fireweed Shoots', false, baseDuration, 'FireweedShootsItem'),
+  new Crop('flax', 'Flax', false, baseDuration, 'FlaxItem'),
+  new Crop('huckleberries', 'Huckleberries', true, regrowableDuration, 'HuckleberriesItem'),
+  new Crop('papayas', 'Papayas', true, regrowableDuration, 'PapayaItem'),
+  new Crop('pineapples', 'Pineapples', true, regrowableDuration, 'PineappleItem'),
+  new Crop('pears', 'Prickly Pears', true, regrowableDuration, 'PricklyPearFruitItem'),
+  new Crop('pumpkins', 'Pumpkins', false, baseDuration, 'PumpkinItem'),
+  new Crop('rice', 'Rice', false, baseDuration, 'RiceItem'),
+  new Crop('sunflowers', 'Sunflowers', false, baseDuration, 'SunflowerItem'),
+  new Crop('taro', 'Taro Roots', false, baseDuration, 'TaroRootItem'),
+  new Crop('tomatoes', 'Tomatoes', true, regrowableDuration, 'TomatoItem'),
+  new Crop('wheat', 'Wheat', false, baseDuration, 'WheatItem')
 ]

@@ -46,6 +46,7 @@ export class FieldService {
     field.harvestTime.set(storedField.harvestTime);
     field.selfRegenFullyGrown.set(storedField.selfRegenFullyGrown);
     field.isPlanted.set(storedField.isPlanted);
+    field.plantCount.set(storedField.plantCount);
     return field;
   }
 }

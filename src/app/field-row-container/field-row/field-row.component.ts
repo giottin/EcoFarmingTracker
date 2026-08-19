@@ -52,6 +52,7 @@ export class FieldRowComponent {
   });
 
   readonly cropOptions: WritableSignal<Crop[]> = signal([]);
+  readonly unavailableCropIcons = signal<ReadonlySet<string>>(new Set());
 
   constructor(
     private readonly cropService: CropService,
@@ -65,6 +66,18 @@ export class FieldRowComponent {
     return this.cropService.getDisplayName(crop);
   }
 
+  cropIconUrl(crop: Crop): string {
+    return this.cropService.getIconUrl(crop);
+  }
+
+  cropIconUnavailable(crop: Crop): boolean {
+    return this.unavailableCropIcons().has(crop.iconName);
+  }
+
+  markCropIconUnavailable(crop: Crop) {
+    this.unavailableCropIcons.update(icons => new Set(icons).add(crop.iconName));
+  }
+
   onCropChange(newCrop: Crop) {
     this.field().crop.set(newCrop);
     this.field().plantTime.set(undefined);
@@ -75,6 +88,12 @@ export class FieldRowComponent {
 
   onFieldNameChange(newFieldName: string) {
     this.field().name.set(newFieldName);
+    this.save();
+  }
+
+  onPlantCountChange(value: number | string | null) {
+    const count = Math.floor(Number(value));
+    this.field().plantCount.set(Number.isFinite(count) && count > 0 ? count : undefined);
     this.save();
   }
 

@@ -6,12 +6,14 @@ export class Crop {
   name = signal('');
   regenerates = signal(false);
   growthTime = signal(new Duration(0, 0));
+  readonly iconName: string;
 
-  constructor(id: string, name: string, regenerates: boolean, duration: Duration) {
+  constructor(id: string, name: string, regenerates: boolean, duration: Duration, iconName = '') {
     this.id.set(id);
     this.name.set(name);
     this.regenerates.set(regenerates);
     this.growthTime.set(duration);
+    this.iconName = iconName;
   }
 
   serialize() {

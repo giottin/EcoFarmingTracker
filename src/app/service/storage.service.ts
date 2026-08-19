@@ -10,6 +10,7 @@ type FieldRow = {
   harvest_time: string | null;
   self_regen_fully_grown: boolean;
   is_planted: boolean;
+  plant_count: number | null;
   sort_order: number;
 };
 
@@ -48,7 +49,7 @@ export class StorageService {
   async getStoredFields(): Promise<StoredField[]> {
     const {data, error} = await this.supabase.client
       .from('farming_fields')
-      .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, sort_order')
+      .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, plant_count, sort_order')
       .order('sort_order', {ascending: true})
       .order('id', {ascending: true});
     if (error || !data) return [];
@@ -108,6 +109,7 @@ export class StorageService {
       harvest_time: stored.harvestTime?.toISOString() ?? null,
       self_regen_fully_grown: stored.selfRegenFullyGrown,
       is_planted: stored.isPlanted,
+      plant_count: stored.plantCount ?? null,
       sort_order: sortOrder,
       updated_at: new Date().toISOString()
     };
@@ -121,7 +123,8 @@ export class StorageService {
       plantTime: row.plant_time ? new Date(row.plant_time) : undefined,
       harvestTime: row.harvest_time ? new Date(row.harvest_time) : undefined,
       selfRegenFullyGrown: row.self_regen_fully_grown,
-      isPlanted: row.is_planted
+      isPlanted: row.is_planted,
+      plantCount: row.plant_count === null ? undefined : Number(row.plant_count)
     };
   }
 }

@@ -1,46 +1,59 @@
-import {Component, computed, OnInit, signal} from '@angular/core';
+import {Component, computed, OnDestroy, OnInit, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {FERTILIZER_DEFINITIONS, fertilizerImageUrl} from '../fertilizer-plans/fertilizer-data';
 import {FertilizerPlansService} from '../service/fertilizer-plans.service';
 import {Field} from '../model/field';
 import {FieldService} from '../service/field.service';
+import {CropService} from '../service/crop.service';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatSelectModule} from '@angular/material/select';
 
 export type Nutrients = { nitrogen: number; phosphorus: number; potassium: number };
 type Fertilizer = (typeof FERTILIZER_DEFINITIONS)[number] & {available: boolean};
 type Solution = { quantities: number[]; final: Nutrients; total: number; totalDeficit: number; worstDeficit: number };
 
-@Component({selector: 'app-automatic-fertilizer-calculator', imports: [FormsModule], templateUrl: './automatic-fertilizer-calculator.component.html', styleUrl: './automatic-fertilizer-calculator.component.scss'})
-export class AutomaticFertilizerCalculatorComponent implements OnInit {
+@Component({selector: 'app-automatic-fertilizer-calculator', imports: [FormsModule, MatFormFieldModule, MatSelectModule], templateUrl: './automatic-fertilizer-calculator.component.html', styleUrl: './automatic-fertilizer-calculator.component.scss'})
+export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy {
   private readonly storageKey = 'eco-automatic-fertilizer-calculator';
   readonly fertilizers: Fertilizer[] = FERTILIZER_DEFINITIONS.map(fertilizer => ({...fertilizer, available: true}));
   readonly imageUrl = fertilizerImageUrl;
   private readonly unavailableImages = new Set<string>();
 
   readonly fields = signal<Field[]>([]);
-  readonly selectedField = computed(() => this.fields().find(field => field.id === this.fieldId) ?? null);
-  fieldId: number | null = null;
+  readonly selectedField = computed(() => this.fields().find(field => field.id === this.fieldId()) ?? null);
+  readonly claims = computed<number | null>(() => {
+    const count = this.selectedField()?.plantCount();
+    return count && count > 0 ? Math.ceil(count / 25) : null;
+  });
+  readonly unavailableCropIcons = signal<ReadonlySet<string>>(new Set());
+  fieldId = signal<number | null>(null);
   current: Nutrients = {nitrogen: 0, phosphorus: 0, potassium: 0};
-  claims = 1;
   solution: Solution | null = null;
   savingPlan = false;
   planSaved = false;
   planError = false;
+  private stopWatching?: () => void;
 
   constructor(
     private readonly fertilizerPlans: FertilizerPlansService,
-    private readonly fieldService: FieldService
+    private readonly fieldService: FieldService,
+    private readonly cropService: CropService
   ) {}
 
   async ngOnInit() {
     this.restore();
     this.fields.set(await this.fieldService.getFields());
     await this.fertilizerPlans.load();
+    this.stopWatching = this.fieldService.watchFields(() => void this.refreshFields());
     this.calculate();
+  }
+
+  ngOnDestroy() {
+    this.stopWatching?.();
   }
 
   calculate() {
     this.current = {nitrogen: this.clamp(this.current.nitrogen), phosphorus: this.clamp(this.current.phosphorus), potassium: this.clamp(this.current.potassium)};
-    this.claims = Math.max(1, Math.floor(this.number(this.claims)));
     const scale = 10;
     const capacity = [Math.round((100 - this.current.nitrogen) * scale), Math.round((100 - this.current.phosphorus) * scale), Math.round((100 - this.current.potassium) * scale)];
     const availableFertilizers = this.fertilizers.map((fertilizer, originalIndex) => ({originalIndex, contribution: [Math.round(fertilizer.nitrogen * scale), Math.round(fertilizer.phosphorus * scale), Math.round(fertilizer.potassium * scale)]})).filter(({originalIndex}) => this.fertilizers[originalIndex].available);
@@ -67,28 +80,39 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit {
   }
 
   quantity(index: number): number { return this.solution?.quantities[index] ?? 0; }
-  totalQuantity(index: number): number { return this.quantity(index) * this.claims; }
+  totalQuantity(index: number): number { return this.quantity(index) * (this.claims() ?? 0); }
   format(value: number): string { return Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.', ','); }
   setAvailability(index: number, value: unknown) { this.fertilizers[index].available = value === true; this.calculate(); }
-  fieldChanged() { this.planSaved = false; this.planError = false; this.save(); }
+  fieldChanged(value: number | null) { this.fieldId.set(value === null ? null : Number(value)); this.planSaved = false; this.planError = false; this.calculate(); }
   fieldDisplayName(field: Field): string { return field.name().trim() || `Champ sans nom #${field.id}`; }
+  fieldCropName(field: Field): string { return this.cropService.getDisplayName(field.crop()); }
+  cropIconUrl(field: Field): string { return this.cropService.getIconUrl(field.crop()); }
+  cropIconUnavailable(field: Field): boolean { return this.unavailableCropIcons().has(field.crop().iconName); }
+  markCropIconUnavailable(field: Field) { this.unavailableCropIcons.update(icons => new Set(icons).add(field.crop().iconName)); }
   imageUnavailable(iconName: string) { return this.unavailableImages.has(iconName); }
   markImageUnavailable(iconName: string) { this.unavailableImages.add(iconName); }
-  reset() { this.fieldId = null; this.current = {nitrogen: 0, phosphorus: 0, potassium: 0}; this.claims = 1; this.calculate(); }
+  reset() { this.fieldId.set(null); this.current = {nitrogen: 0, phosphorus: 0, potassium: 0}; this.calculate(); }
 
   async savePlan() {
     const field = this.selectedField();
-    if (!this.solution || !field || this.savingPlan) return;
+    const claims = this.claims();
+    if (!this.solution || !field || !claims || this.savingPlan) return;
     this.savingPlan = true; this.planSaved = false; this.planError = false;
     const lines = this.fertilizers.map((fertilizer, index) => ({fertilizer, perClaim: this.quantity(index), total: this.totalQuantity(index)})).filter(({perClaim}) => perClaim > 0).map(({fertilizer, perClaim, total}) => ({key: fertilizer.key, label: fertilizer.label, iconName: fertilizer.iconName, perClaim, total}));
-    const saved = await this.fertilizerPlans.addOrReplace({fieldId: field.id, fieldName: this.fieldDisplayName(field), claims: this.claims, nutrients: {...this.current}, lines});
+    const saved = await this.fertilizerPlans.addOrReplace({fieldId: field.id, fieldName: this.fieldDisplayName(field), claims, nutrients: {...this.current}, lines});
     this.savingPlan = false; this.planSaved = saved; this.planError = !saved;
   }
 
   private clamp(value: number): number { return Math.min(100, Math.max(0, this.number(value))); }
   private number(value: number): number { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
-  private save() { localStorage.setItem(this.storageKey, JSON.stringify({fieldId: this.fieldId, current: this.current, claims: this.claims, availability: Object.fromEntries(this.fertilizers.map(item => [item.key, item.available]))})); }
+  private async refreshFields() {
+    const fields = await this.fieldService.getFields();
+    this.fields.set(fields);
+    if (this.fieldId() !== null && !fields.some(field => field.id === this.fieldId())) this.fieldId.set(null);
+  }
+
+  private save() { localStorage.setItem(this.storageKey, JSON.stringify({fieldId: this.fieldId(), current: this.current, availability: Object.fromEntries(this.fertilizers.map(item => [item.key, item.available]))})); }
   private restore() {
-    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId = Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null; this.current = {nitrogen: this.clamp(saved.current?.nitrogen), phosphorus: this.clamp(saved.current?.phosphorus), potassium: this.clamp(saved.current?.potassium)}; this.claims = Math.max(1, Math.floor(this.number(saved.claims))); for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
+    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId.set(Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null); this.current = {nitrogen: this.clamp(saved.current?.nitrogen), phosphorus: this.clamp(saved.current?.phosphorus), potassium: this.clamp(saved.current?.potassium)}; for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
   }
 }

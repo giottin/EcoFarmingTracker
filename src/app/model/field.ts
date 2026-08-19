@@ -9,6 +9,7 @@ export class Field {
   plantTime = signal<Date | undefined>(undefined)
   harvestTime = signal<Date | undefined>(undefined);
   selfRegenFullyGrown = signal(false);
+  plantCount = signal<number | undefined>(undefined);
 
   isPlanted = signal(false);
 
@@ -27,7 +28,8 @@ export class Field {
       plantTime: this.plantTime(),
       harvestTime: this.harvestTime(),
       selfRegenFullyGrown: this.selfRegenFullyGrown(),
-      isPlanted: this.isPlanted()
+      isPlanted: this.isPlanted(),
+      plantCount: this.plantCount()
     }
   }
 
@@ -81,5 +83,6 @@ export type StoredField = {
   plantTime: Date | undefined,
   harvestTime: Date | undefined,
   selfRegenFullyGrown: boolean,
-  isPlanted: boolean
+  isPlanted: boolean,
+  plantCount: number | undefined
 }

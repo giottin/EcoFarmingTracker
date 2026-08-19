@@ -2,12 +2,14 @@ import {AutomaticFertilizerCalculatorComponent} from './automatic-fertilizer-cal
 import {FertilizerPlansService} from '../service/fertilizer-plans.service';
 import {FieldService} from '../service/field.service';
 import {Field} from '../model/field';
+import {CropService} from '../service/crop.service';
 
 describe('AutomaticFertilizerCalculatorComponent', () => {
   beforeEach(() => localStorage.clear());
   const createComponent = () => new AutomaticFertilizerCalculatorComponent(
     {addOrReplace: async () => true, load: async () => undefined} as unknown as FertilizerPlansService,
-    {getFields: async () => []} as unknown as FieldService
+    {getFields: async () => [], watchFields: () => () => undefined} as unknown as FieldService,
+    {} as CropService
   );
 
   it('makes every fertilizer available by default', () => {
@@ -58,14 +60,23 @@ describe('AutomaticFertilizerCalculatorComponent', () => {
     expect(component.solution!.final.potassium).toBeLessThanOrEqual(100);
   });
 
+  it('derives claims from the selected field size and always rounds up', () => {
+    const component = createComponent();
+    component.fields.set([{id: 12, plantCount: () => 451} as unknown as Field]);
+    component.fieldId.set(12);
+
+    expect(component.claims()).toBe(19);
+  });
+
   it('saves the exact current quantities against the selected field', async () => {
     const addOrReplace = jasmine.createSpy('addOrReplace').and.resolveTo(true);
     const component = new AutomaticFertilizerCalculatorComponent(
       {addOrReplace, load: async () => undefined} as unknown as FertilizerPlansService,
-      {getFields: async () => []} as unknown as FieldService
+      {getFields: async () => [], watchFields: () => () => undefined} as unknown as FieldService,
+      {} as CropService
     );
-    component.fields.set([{id: 42, name: () => 'Betteraves'} as unknown as Field]);
-    component.fieldId = 42;
+    component.fields.set([{id: 42, name: () => 'Betteraves', plantCount: () => 25} as unknown as Field]);
+    component.fieldId.set(42);
     component.current = {nitrogen: 80, phosphorus: 98, potassium: 98};
     component.fertilizers.forEach(fertilizer => fertilizer.available = false);
     component.setAvailability(1, true);

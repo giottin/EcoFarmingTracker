@@ -10,8 +10,9 @@ import {SignGeneratorComponent} from './sign-generator/sign-generator.component'
 import {AutomaticFertilizerCalculatorComponent} from './automatic-fertilizer-calculator/automatic-fertilizer-calculator.component';
 import {SavedSignsComponent} from './saved-signs/saved-signs.component';
 import {FertilizerPlansComponent} from './fertilizer-plans/fertilizer-plans.component';
+import {CalorieCalculatorComponent} from './calorie-calculator/calorie-calculator.component';
 
-type Tool = 'fields' | 'signs' | 'saved-signs' | 'automatic-fertilizer' | 'fertilizer-plans';
+type Tool = 'fields' | 'signs' | 'saved-signs' | 'automatic-fertilizer' | 'fertilizer-plans' | 'calorie-calculator';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +25,8 @@ type Tool = 'fields' | 'signs' | 'saved-signs' | 'automatic-fertilizer' | 'ferti
     SignGeneratorComponent,
     AutomaticFertilizerCalculatorComponent,
     SavedSignsComponent,
-    FertilizerPlansComponent
+    FertilizerPlansComponent,
+    CalorieCalculatorComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

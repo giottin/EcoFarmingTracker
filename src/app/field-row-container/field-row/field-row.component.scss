@@ -1,5 +1,10 @@
 
 .field-card { margin: .5rem 1rem; padding: .75rem; border: 1px solid transparent; border-radius: 1rem; transition: background .35s ease, border-color .35s ease, box-shadow .35s ease; }
+.field-form { gap: .1rem; }
+.crop-marker { display: grid; flex: 0 0 5.5rem; width: 5.5rem; justify-items: center; gap: .2rem; margin: .35rem .2rem; text-align: center; }
+.crop-marker img, .crop-marker > .material-icons { width: 3.5rem; height: 3.5rem; object-fit: contain; }.crop-marker > .material-icons { display: grid; place-items: center; border-radius: .7rem; color: #80cbc4; background: rgba(128,203,196,.1); font-size: 1.8rem; }
+.crop-marker small { max-width: 6rem; color: rgba(255,255,255,.62); font-size: .66rem; line-height: 1.1; }
+.field-size-input { flex: 1 1 10rem; min-width: 10rem; }.crop-select-value, .crop-option { display: inline-flex; align-items: center; gap: .45rem; }.crop-select-value img, .crop-option img { width: 1.45rem; height: 1.45rem; object-fit: contain; }.crop-select-value .material-icons, .crop-option .material-icons { color: #80cbc4; font-size: 1.2rem; }
 .field-growing { border-color: rgba(255, 167, 38, .48); background: linear-gradient(135deg, rgba(255, 152, 0, .2), rgba(90, 55, 9, .16)); box-shadow: inset 4px 0 #ff9d2e; }
 .field-ready { border-color: rgba(102, 187, 106, .5); background: linear-gradient(135deg, rgba(76, 175, 80, .2), rgba(18, 75, 43, .16)); box-shadow: inset 4px 0 #66bb6a; }
 .field-harvested { border-color: rgba(239, 83, 80, .46); background: linear-gradient(135deg, rgba(211, 47, 47, .19), rgba(79, 22, 22, .16)); box-shadow: inset 4px 0 #ef5350; }
