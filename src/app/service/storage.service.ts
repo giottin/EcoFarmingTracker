@@ -17,12 +17,12 @@ type FieldRow = {
 @Injectable({providedIn: 'root'})
 export class StorageService {
   private readonly saveTimers = new Map<number, ReturnType<typeof setTimeout>>();
-  private readonly localWriteUntil = new Map<number, number>();
+  private readonly inFlightWrites = new Map<number, number>();
 
   constructor(private readonly supabase: SupabaseService) {}
 
   hasPendingWrites(): boolean {
-    return this.saveTimers.size > 0;
+    return this.saveTimers.size > 0 || this.inFlightWrites.size > 0;
   }
 
   async getGrowthTimeModifier(): Promise<number> {
@@ -52,7 +52,12 @@ export class StorageService {
       .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, plant_count, sort_order')
       .order('sort_order', {ascending: true})
       .order('id', {ascending: true});
-    if (error || !data) return [];
+    // Never let a failed network request masquerade as an actual empty list.
+    // The caller can then preserve the fields currently shown on screen.
+    if (error || !data) {
+      console.error('Unable to load fields', {error});
+      throw error ?? new Error('Unable to load fields');
+    }
     return (data as FieldRow[]).map(row => this.toStoredField(row));
   }
 
@@ -65,7 +70,6 @@ export class StorageService {
       .single();
     if (error || !data) return null;
     const id = Number(data.id);
-    this.localWriteUntil.set(id, Date.now() + 1500);
     return id;
   }
 
@@ -74,14 +78,7 @@ export class StorageService {
     if (existingTimer) clearTimeout(existingTimer);
     this.saveTimers.set(field.id, setTimeout(() => {
       this.saveTimers.delete(field.id);
-      this.localWriteUntil.set(field.id, Date.now() + 1500);
-      void this.supabase.client
-        .from('farming_fields')
-        .update(this.toRow(field, sortOrder))
-        .eq('id', field.id)
-        .then(({error}) => {
-          if (error) console.error('Unable to save field', {fieldId: field.id, error});
-        });
+      void this.updateField(field, sortOrder);
     }, 300));
   }
 
@@ -89,15 +86,44 @@ export class StorageService {
     const timer = this.saveTimers.get(id);
     if (timer) clearTimeout(timer);
     this.saveTimers.delete(id);
-    this.localWriteUntil.set(id, Date.now() + 1500);
     await this.supabase.client.from('farming_fields').delete().eq('id', id);
   }
 
-  watchFields(onChange: () => void) {
-    const timer = setInterval(() => {
-      if (!this.hasPendingWrites()) onChange();
+  watchFields(onChange: () => void | Promise<void>) {
+    let reloading = false;
+    const timer = setInterval(async () => {
+      if (reloading || this.hasPendingWrites()) return;
+      reloading = true;
+      try {
+        await onChange();
+      } finally {
+        reloading = false;
+      }
     }, 5000);
     return () => clearInterval(timer);
+  }
+
+  private async updateField(field: Field, sortOrder: number) {
+    this.beginWrite(field.id);
+    try {
+      const {error} = await this.supabase.client
+        .from('farming_fields')
+        .update(this.toRow(field, sortOrder))
+        .eq('id', field.id);
+      if (error) console.error('Unable to save field', {fieldId: field.id, error});
+    } finally {
+      this.finishWrite(field.id);
+    }
+  }
+
+  private beginWrite(id: number) {
+    this.inFlightWrites.set(id, (this.inFlightWrites.get(id) ?? 0) + 1);
+  }
+
+  private finishWrite(id: number) {
+    const remaining = (this.inFlightWrites.get(id) ?? 1) - 1;
+    if (remaining > 0) this.inFlightWrites.set(id, remaining);
+    else this.inFlightWrites.delete(id);
   }
 
   private toRow(field: Field, sortOrder: number) {

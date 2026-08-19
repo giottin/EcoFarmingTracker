@@ -4,7 +4,7 @@ import {MatInputModule} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
 import {CropService} from '../../service/crop.service';
 import {Crop} from '../../model/crop';
-import {MatSelectModule} from '@angular/material/select';
+import {MatMenuModule} from '@angular/material/menu';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {StorageService} from '../../service/storage.service';
@@ -12,7 +12,7 @@ import {FertilizerPlansService} from '../../service/fertilizer-plans.service';
 
 @Component({
   selector: 'app-field-row',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, FormsModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatMenuModule, FormsModule],
   templateUrl: './field-row.component.html',
   styleUrl: './field-row.component.scss'
 })
@@ -29,6 +29,7 @@ export class FieldRowComponent {
     return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
   });
   readonly fieldPlaceholder = computed(() => `Champ ${this.cropDisplayName(this.field().crop())}`);
+  readonly hasSelectedCrop = computed(() => this.field().crop().id() !== '-1');
   readonly maturityLabel = computed(() => {
     const maturity = this.field().harvestTime();
     if (!maturity) return '';
@@ -79,9 +80,11 @@ export class FieldRowComponent {
   }
 
   onCropChange(newCrop: Crop) {
+    if (newCrop.id() === this.field().crop().id()) return;
     this.field().crop.set(newCrop);
     this.field().plantTime.set(undefined);
     this.field().harvestTime.set(undefined);
+    this.field().selfRegenFullyGrown.set(false);
     this.field().isPlanted.set(false);
     this.save();
   }

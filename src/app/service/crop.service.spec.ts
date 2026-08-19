@@ -29,4 +29,10 @@ describe('CropService', () => {
       expect(service.getDisplayName(crop)).withContext(crop.id()).toBe(expectedNames[crop.id()]);
     }
   });
+
+  it('uses the actual harvested-item icons for agave, cotton and flax', () => {
+    expect(service.getCropById('agave')?.iconName).toBe('AgaveLeavesItem');
+    expect(service.getCropById('cotton')?.iconName).toBe('CottonBollItem');
+    expect(service.getCropById('flax')?.iconName).toBe('FlaxStemItem');
+  });
 });

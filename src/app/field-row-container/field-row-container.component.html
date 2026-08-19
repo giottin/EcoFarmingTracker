@@ -8,6 +8,9 @@
   @if (loading()) {
     <div class="loading-state">Chargement des champs partagés…</div>
   }
+  @if (loadError()) {
+    <div class="loading-state">Impossible de synchroniser les champs pour le moment. Les données déjà affichées sont conservées.</div>
+  }
 
   @for (field of fields(); track field.id; let index = $index) {
     <app-field-row [field]="field" [sortOrder]="index" [now]="now()" (rowClosed)="onRowClosed(field)" class="w-full my-1">

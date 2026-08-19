@@ -71,18 +71,18 @@ const baseDuration = new Duration(19, 12);
 const regrowableDuration = new Duration(28, 48);
 
 const ALL_CROPS: Crop[] = [
-  new Crop('agave', 'Agave', false, baseDuration, 'AgaveItem'),
+  new Crop('agave', 'Agave', false, baseDuration, 'AgaveLeavesItem'),
   new Crop('beans', 'Beans', false, baseDuration, 'BeansItem'),
   new Crop('beets', 'Beets', false, baseDuration, 'BeetItem'),
   new Crop('bolete', 'Bolete Mushrooms', false, baseDuration, 'BoleteMushroomsItem'),
   new Crop('camas', 'Camas Bulbs', false, baseDuration, 'CamasBulbItem'),
   new Crop('cookeina', 'Cookeina Mushrooms', false, baseDuration, 'CookeinaMushroomsItem'),
   new Crop('corn', 'Corn', false, baseDuration, 'CornItem'),
-  new Crop('cotton', 'Cotton', true, regrowableDuration, 'CottonItem'),
+  new Crop('cotton', 'Cotton', true, regrowableDuration, 'CottonBollItem'),
   new Crop('crimini', 'Crimini Mushrooms', false, baseDuration, 'CriminiMushroomsItem'),
   new Crop('fiddleheads', 'Fiddleheads', false, baseDuration, 'FiddleheadsItem'),
   new Crop('fireweed', 'Fireweed Shoots', false, baseDuration, 'FireweedShootsItem'),
-  new Crop('flax', 'Flax', false, baseDuration, 'FlaxItem'),
+  new Crop('flax', 'Flax', false, baseDuration, 'FlaxStemItem'),
   new Crop('huckleberries', 'Huckleberries', true, regrowableDuration, 'HuckleberriesItem'),
   new Crop('papayas', 'Papayas', true, regrowableDuration, 'PapayaItem'),
   new Crop('pineapples', 'Pineapples', true, regrowableDuration, 'PineappleItem'),

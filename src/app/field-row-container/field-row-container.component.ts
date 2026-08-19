@@ -19,6 +19,7 @@ import {FertilizerPlansService} from '../service/fertilizer-plans.service';
 export class FieldRowContainerComponent implements OnInit, OnDestroy {
   readonly fields = signal<Field[]>([]);
   readonly loading = signal(true);
+  readonly loadError = signal(false);
   readonly adding = signal(false);
   readonly now = signal(Date.now());
   private readonly clock = window.setInterval(() => this.now.set(Date.now()), 15000);
@@ -34,7 +35,10 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
       const [fields] = await Promise.all([this.fieldService.getFields(), this.fertilizerPlans.load()]);
       this.fields.set(fields);
       if (this.fields().length === 0) await this.addRandomField();
-      this.stopWatching = this.fieldService.watchFields(() => void this.reloadFields());
+      this.stopWatching = this.fieldService.watchFields(() => this.reloadFields());
+    } catch (error) {
+      console.error('Unable to initialise fields', {error});
+      this.loadError.set(true);
     } finally {
       this.loading.set(false);
     }
@@ -60,7 +64,13 @@ export class FieldRowContainerComponent implements OnInit, OnDestroy {
 
   private async reloadFields() {
     if (this.fieldService.hasPendingWrites()) return;
-    const [fields] = await Promise.all([this.fieldService.getFields(), this.fertilizerPlans.load()]);
-    this.fields.set(fields);
+    try {
+      const [fields] = await Promise.all([this.fieldService.getFields(), this.fertilizerPlans.load()]);
+      this.loadError.set(false);
+      this.fields.set(fields);
+    } catch (error) {
+      console.error('Unable to reload fields', {error});
+      this.loadError.set(true);
+    }
   }
 }

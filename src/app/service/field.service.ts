@@ -29,7 +29,7 @@ export class FieldService {
     await this.storageService.deleteField(id);
   }
 
-  watchFields(onChange: () => void) {
+  watchFields(onChange: () => void | Promise<void>) {
     return this.storageService.watchFields(onChange);
   }
 

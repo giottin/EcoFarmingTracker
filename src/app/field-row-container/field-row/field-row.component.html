@@ -1,10 +1,17 @@
 <div class="field-card" [class.field-growing]="fieldStatus() === 'growing'" [class.field-ready]="fieldStatus() === 'ready'" [class.field-harvested]="fieldStatus() === 'harvested'" [class.field-fertilizing]="fieldStatus() === 'fertilizing'" [class.field-fertilizer-pending]="needsFertilizing()">
   <form class="flex flex-wrap items-center field-form">
-    <div class="crop-marker" [attr.aria-label]="'Culture : ' + cropDisplayName(field().crop())">
-      @if (!cropIconUnavailable(field().crop())) { <img [src]="cropIconUrl(field().crop())" [alt]="cropDisplayName(field().crop())" (error)="markCropIconUnavailable(field().crop())"> }
-      @else { <span class="material-icons">grass</span> }
-      <small>{{ field().plantCount() ? field().plantCount() + ' emplacements' : 'Taille à renseigner' }}</small>
-    </div>
+    <button type="button" class="crop-selector" [matMenuTriggerFor]="cropMenu" [attr.aria-label]="hasSelectedCrop() ? 'Modifier la culture : ' + cropDisplayName(field().crop()) : 'Choisir une culture'">
+      @if (hasSelectedCrop() && !cropIconUnavailable(field().crop())) { <img [src]="cropIconUrl(field().crop())" [alt]="cropDisplayName(field().crop())" (error)="markCropIconUnavailable(field().crop())"> }
+      @else if (hasSelectedCrop()) { <span class="material-icons">grass</span> }
+      @else { <span>Culture</span> }
+    </button>
+    <mat-menu #cropMenu="matMenu" xPosition="after" class="crop-menu">
+      @for (crop of cropOptions(); track crop.id()) {
+        <button type="button" mat-menu-item (click)="onCropChange(crop)">
+          <span class="crop-option">@if (!cropIconUnavailable(crop)) { <img [src]="cropIconUrl(crop)" [alt]="''" (error)="markCropIconUnavailable(crop)"> } @else { <span class="material-icons">grass</span> }{{ cropDisplayName(crop) }}</span>
+        </button>
+      }
+    </mat-menu>
     <mat-form-field appearance="outline" floatLabel="always" class="m-3 flex-1 min-w-48">
       <mat-label>Nom du champ</mat-label>
       <input matInput type="text" name="field-name"
@@ -13,23 +20,11 @@
              (ngModelChange)="onFieldNameChange($event)"
              class="placeholder:opacity-70">
     </mat-form-field>
-    <mat-form-field appearance="outline" floatLabel="always" class="m-3 flex-1 min-w-40">
-      <mat-label>Culture</mat-label>
-      <mat-select name="field-crop"
-                  [ngModel]="field().crop()"
-                  (ngModelChange)="onCropChange($event)"
-                  class="mx-3">
-        <mat-select-trigger><span class="crop-select-value">@if (!cropIconUnavailable(field().crop())) { <img [src]="cropIconUrl(field().crop())" [alt]="''"> } @else { <span class="material-icons">grass</span> }{{ cropDisplayName(field().crop()) }}</span></mat-select-trigger>
-        @for (crop of cropOptions(); track crop.id) {
-          <mat-option [value]="crop"><span class="crop-option">@if (!cropIconUnavailable(crop)) { <img [src]="cropIconUrl(crop)" [alt]="''" (error)="markCropIconUnavailable(crop)"> } @else { <span class="material-icons">grass</span> }{{ cropDisplayName(crop) }}</span></mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="outline" floatLabel="always" class="m-3 field-size-input">
-      <mat-label>Taille du champ</mat-label>
-      <input matInput type="number" min="1" step="1" inputmode="numeric" name="field-plant-count" [ngModel]="field().plantCount()" (ngModelChange)="onPlantCountChange($event)" placeholder="Nombre de plantes">
-      <mat-hint>Plantes / emplacements</mat-hint>
-    </mat-form-field>
+    <label class="plant-count" title="Nombre de plantes ou emplacements cultivés">
+      <span class="material-icons" aria-hidden="true">grass</span>
+      <input type="number" min="1" step="1" inputmode="numeric" name="field-plant-count" [ngModel]="field().plantCount()" (ngModelChange)="onPlantCountChange($event)" placeholder="—" aria-label="Nombre de plantes ou emplacements">
+      <span>plantes</span>
+    </label>
     <div class="maturity-panel" aria-live="polite">
       @switch (fieldStatus()) {
         @case ('growing') {

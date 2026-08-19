@@ -42,4 +42,15 @@ describe('Field harvest behavior', () => {
     expect(field.harvestTime()).toBeUndefined();
     expect(field.selfRegenFullyGrown()).toBeFalse();
   });
+
+  it('serializes a field size without changing a running timer', () => {
+    const field = new Field(1, new Crop('wheat', 'Wheat', false, new Duration(19, 12)));
+    field.onPlant();
+    const harvestTime = field.harvestTime()?.toISOString();
+    field.plantCount.set(450);
+
+    expect(field.serialize().plantCount).toBe(450);
+    expect(field.serialize().isPlanted).toBeTrue();
+    expect(field.serialize().harvestTime?.toISOString()).toBe(harvestTime);
+  });
 });
