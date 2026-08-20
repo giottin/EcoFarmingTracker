@@ -111,5 +111,6 @@ describe('AutomaticFertilizerCalculatorComponent', () => {
     await component.savePlan();
 
     expect(addOrReplace).toHaveBeenCalledWith(jasmine.objectContaining({fieldId: 42, fieldName: 'Betteraves', claims: 1, lines: [{key: 'hide', label: 'Peau', iconName: 'HideAshFertilizerItem', perClaim: 1, total: 1}]}));
+    expect(addOrReplace).toHaveBeenCalledWith(jasmine.objectContaining({resultingNutrients: {nitrogen: 100, phosphorus: 100, potassium: 100}}));
   });
 });

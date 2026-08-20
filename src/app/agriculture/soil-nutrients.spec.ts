@@ -6,7 +6,6 @@ import {
   calculateFieldNutrientsAfterHarvest,
   cropNutrientConsumptionPerClaim,
   getNutrientWarnings,
-  NUTRIENT_WARNING_MULTIPLIER,
   PLANTS_PER_CLAIM
 } from './soil-nutrients';
 
@@ -35,8 +34,20 @@ describe('soil nutrient rules', () => {
       .toEqual({nitrogen: 86, phosphorus: 88, potassium: 89.6});
   });
 
-  it('uses a warning multiplier independent from the 25 plants per claim', () => {
-    expect(NUTRIENT_WARNING_MULTIPLIER).toBe(20);
-    expect(getNutrientWarnings({nitrogen: 3.9, phosphorus: 2, potassium: 5.9}, crop)).toEqual(['nitrogen', 'potassium']);
+  it('warns for huckleberries only when a used nutrient reaches its exact threshold', () => {
+    const huckleberries = new Crop('huckleberries', 'Huckleberries', true, new Duration(1, 0));
+    expect(getNutrientWarnings({nitrogen: 45, phosphorus: 19, potassium: 24}, huckleberries)).toEqual([]);
+    expect(getNutrientWarnings({nitrogen: 44, phosphorus: 15, potassium: 23}, huckleberries)).toEqual(['phosphorus']);
+  });
+
+  it('warns at the corn nitrogen threshold', () => {
+    const corn = new Crop('corn', 'Corn', false, new Duration(1, 0));
+    expect(getNutrientWarnings({nitrogen: 40, phosphorus: 60, potassium: 50}, corn)).toEqual(['nitrogen']);
+  });
+
+  it('ignores nutrients a crop does not use', () => {
+    const rice = new Crop('rice', 'Rice', false, new Duration(1, 0));
+    expect(getNutrientWarnings({nitrogen: 11, phosphorus: 0, potassium: 0}, rice)).toEqual([]);
+    expect(getNutrientWarnings({nitrogen: 10, phosphorus: 100, potassium: 100}, rice)).toEqual(['nitrogen']);
   });
 });

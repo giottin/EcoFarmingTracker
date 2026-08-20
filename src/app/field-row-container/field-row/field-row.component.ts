@@ -137,16 +137,10 @@ export class FieldRowComponent {
     if (!plan) return;
     this.fertilizing.set(true);
     try {
-      const next = calculateFieldNutrientsAfterFertilization(this.field().soilNutrients(), plan.lines, plan.nutrients);
+      const next = plan.resultingNutrients ?? calculateFieldNutrientsAfterFertilization(this.field().soilNutrients(), plan.lines, plan.nutrients);
       if (!next) return;
-      const before = this.field().serialize();
-      this.field().soilNutrients.set(next);
-      const saved = await this.storageService.saveFieldNow(this.field(), this.sortOrder());
-      if (!saved) {
-        this.field().restoreSavedState(before);
-        return;
-      }
-      await this.fertilizerPlans.remove(plan.id);
+      const applied = await this.fertilizerPlans.apply(plan, next);
+      if (applied) this.field().soilNutrients.set(applied);
     } finally {
       this.fertilizing.set(false);
     }

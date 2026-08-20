@@ -112,7 +112,14 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
     if (!this.solution || !field || !claims || this.savingPlan) return;
     this.savingPlan = true; this.planSaved = false; this.planError = false;
     const lines = this.fertilizers.map((fertilizer, index) => ({fertilizer, perClaim: this.quantity(index), total: this.totalQuantity(index)})).filter(({perClaim}) => perClaim > 0).map(({fertilizer, perClaim, total}) => ({key: fertilizer.key, label: fertilizer.label, iconName: fertilizer.iconName, perClaim, total}));
-    const saved = await this.fertilizerPlans.addOrReplace({fieldId: field.id, fieldName: this.fieldDisplayName(field), claims, nutrients: {...this.current}, lines});
+    const saved = await this.fertilizerPlans.addOrReplace({
+      fieldId: field.id,
+      fieldName: this.fieldDisplayName(field),
+      claims,
+      nutrients: {...this.current},
+      resultingNutrients: {...this.solution.final},
+      lines
+    });
     this.savingPlan = false; this.planSaved = saved; this.planError = !saved;
   }
 

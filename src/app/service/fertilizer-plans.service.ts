@@ -1,14 +1,16 @@
 import {Injectable, signal} from '@angular/core';
 import {SupabaseService} from './supabase.service';
-import type {Nutrients} from '../agriculture/soil-nutrients';
+import {clampNutrients, hasTrackedNutrients, type Nutrients} from '../agriculture/soil-nutrients';
 
 export type PlanNutrients = Nutrients;
 export type FertilizerPlanLine = {key: string; label: string; iconName: string; perClaim: number; total: number};
-export type FertilizerPlanDraft = {fieldId: number; fieldName: string; claims: number; nutrients: PlanNutrients; lines: FertilizerPlanLine[]};
-export type FertilizerPlan = FertilizerPlanDraft & {id: number; createdAt: Date};
+export type FertilizerPlanDraft = {fieldId: number; fieldName: string; claims: number; nutrients: PlanNutrients; resultingNutrients: PlanNutrients; lines: FertilizerPlanLine[]};
+export type FertilizerPlan = Omit<FertilizerPlanDraft, 'resultingNutrients'> & {id: number; createdAt: Date; resultingNutrients?: PlanNutrients};
 
-type FertilizerPlanRow = {id: number; field_id: number | null; field_name: string; claims: number; nutrients: PlanNutrients; plan: {lines?: FertilizerPlanLine[]}; created_at: string};
-type PlanPayload = {field_id: number; field_name: string; claims: number; nutrients: PlanNutrients; plan: {lines: FertilizerPlanLine[]}};
+type StoredPlan = {lines?: FertilizerPlanLine[]; resultingNutrients?: PlanNutrients};
+type FertilizerPlanRow = {id: number; field_id: number | null; field_name: string; claims: number; nutrients: PlanNutrients; plan: StoredPlan; created_at: string};
+type PlanPayload = {field_id: number; field_name: string; claims: number; nutrients: PlanNutrients; plan: Required<StoredPlan>};
+type AppliedPlanRow = {next_nitrogen: number; next_phosphorus: number; next_potassium: number};
 
 @Injectable({providedIn: 'root'})
 export class FertilizerPlansService {
@@ -37,7 +39,7 @@ export class FertilizerPlansService {
       field_name: fieldName,
       claims: draft.claims,
       nutrients: draft.nutrients,
-      plan: {lines: draft.lines}
+      plan: {lines: draft.lines, resultingNutrients: clampNutrients(draft.resultingNutrients)}
     };
     const existing = this.plans().find(plan => plan.fieldId === fieldId);
     const response = existing
@@ -57,10 +59,27 @@ export class FertilizerPlansService {
     return true;
   }
 
-  async completeForField(fieldId: number): Promise<boolean> {
-    const plan = this.getForField(fieldId);
-    if (!plan) return true;
-    return this.remove(plan.id);
+  /**
+   * Applies one plan server-side: field nutrients and plan removal happen in
+   * the same transaction, so a double click or a second browser cannot apply
+   * the same plan twice. Legacy plans receive a client-calculated fallback.
+   */
+  async apply(plan: FertilizerPlan, fallback: Nutrients): Promise<Nutrients | null> {
+    const {data, error} = await this.supabase.client.rpc('apply_fertilizer_plan', {
+      p_plan_id: plan.id,
+      p_nitrogen: fallback.nitrogen,
+      p_phosphorus: fallback.phosphorus,
+      p_potassium: fallback.potassium
+    });
+    const row = Array.isArray(data) ? data[0] as AppliedPlanRow | undefined : data as AppliedPlanRow | null;
+    const nutrients = row ? {
+      nitrogen: Number(row.next_nitrogen),
+      phosphorus: Number(row.next_phosphorus),
+      potassium: Number(row.next_potassium)
+    } : undefined;
+    if (error || !nutrients || !hasTrackedNutrients(nutrients)) return null;
+    this.plans.update(plans => plans.filter(candidate => candidate.id !== plan.id));
+    return clampNutrients(nutrients);
   }
 
   getForField(fieldId: number): FertilizerPlan | null {
@@ -68,14 +87,20 @@ export class FertilizerPlansService {
   }
 
   private fromRow(row: FertilizerPlanRow): FertilizerPlan {
+    const resultingNutrients = hasTrackedNutrients(row.plan?.resultingNutrients)
+      ? clampNutrients(row.plan.resultingNutrients)
+      : undefined;
     return {
       id: Number(row.id),
       fieldId: row.field_id === null ? 0 : Number(row.field_id),
       fieldName: row.field_name,
       claims: Number(row.claims),
-      nutrients: row.nutrients,
+      nutrients: hasTrackedNutrients(row.nutrients) ? clampNutrients(row.nutrients) : {...EMPTY_PLAN_NUTRIENTS},
       lines: Array.isArray(row.plan?.lines) ? row.plan.lines : [],
-      createdAt: new Date(row.created_at)
+      createdAt: new Date(row.created_at),
+      ...(resultingNutrients ? {resultingNutrients} : {})
     };
   }
 }
+
+const EMPTY_PLAN_NUTRIENTS: PlanNutrients = {nitrogen: 0, phosphorus: 0, potassium: 0};

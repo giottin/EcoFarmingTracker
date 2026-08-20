@@ -4,12 +4,6 @@ import {FERTILIZER_DEFINITIONS} from '../fertilizer-plans/fertilizer-data';
 /** One farming plot and one land claim always cover a 5 × 5 area. */
 export const PLANTS_PER_CLAIM = 25;
 
-/**
- * ECO starts reducing yield below roughly twenty times the crop consumption.
- * This is deliberately separate from PLANTS_PER_CLAIM: it is only a warning rule.
- */
-export const NUTRIENT_WARNING_MULTIPLIER = 20;
-
 export type Nutrients = {nitrogen: number; phosphorus: number; potassium: number};
 export type NutrientKey = keyof Nutrients;
 export type FertilizerPlanLineLike = {key: string; perClaim: number; total?: number};
@@ -17,6 +11,37 @@ export type FertilizerPlanLineLike = {key: string; perClaim: number; total?: num
 export const EMPTY_NUTRIENTS: Readonly<Nutrients> = {nitrogen: 0, phosphorus: 0, potassium: 0};
 
 const NUTRIENT_KEYS: readonly NutrientKey[] = ['nitrogen', 'phosphorus', 'potassium'];
+
+/**
+ * Minimum soil percentages before ECO starts limiting the maximum yield for a
+ * crop. A zero means that the crop does not use that nutrient, so it must not
+ * trigger an alert. Soil values already describe one claim; do not multiply
+ * these thresholds by the 25 plants in that claim.
+ */
+export const CROP_NUTRIENT_THRESHOLDS: Readonly<Record<string, Readonly<Nutrients>>> = {
+  agave: {nitrogen: 0, phosphorus: 20, potassium: 0},
+  beans: {nitrogen: 10, phosphorus: 20, potassium: 20},
+  beets: {nitrogen: 20, phosphorus: 30, potassium: 40},
+  bolete: {nitrogen: 10, phosphorus: 20, potassium: 20},
+  camas: {nitrogen: 20, phosphorus: 10, potassium: 40},
+  cookeina: {nitrogen: 10, phosphorus: 20, potassium: 20},
+  corn: {nitrogen: 40, phosphorus: 40, potassium: 10},
+  cotton: {nitrogen: 10, phosphorus: 15, potassium: 20},
+  crimini: {nitrogen: 0, phosphorus: 0, potassium: 20},
+  fiddleheads: {nitrogen: 10, phosphorus: 2, potassium: 4},
+  fireweed: {nitrogen: 20, phosphorus: 30, potassium: 20},
+  flax: {nitrogen: 10, phosphorus: 8, potassium: 12},
+  huckleberries: {nitrogen: 10, phosphorus: 15, potassium: 20},
+  papayas: {nitrogen: 10, phosphorus: 2, potassium: 4},
+  pineapples: {nitrogen: 10, phosphorus: 2, potassium: 4},
+  pears: {nitrogen: 50, phosphorus: 20, potassium: 30},
+  pumpkins: {nitrogen: 0, phosphorus: 20, potassium: 0},
+  rice: {nitrogen: 10, phosphorus: 0, potassium: 0},
+  sunflowers: {nitrogen: 40, phosphorus: 40, potassium: 10},
+  taro: {nitrogen: 10, phosphorus: 2, potassium: 4},
+  tomatoes: {nitrogen: 20, phosphorus: 20, potassium: 20},
+  wheat: {nitrogen: 30, phosphorus: 10, potassium: 10}
+};
 
 export function clampNutrients(nutrients: Nutrients): Nutrients {
   return {
@@ -75,8 +100,8 @@ export function calculateFieldNutrientsAfterFertilization(
 
 export function getNutrientWarnings(current: Nutrients | undefined, crop: Crop): NutrientKey[] {
   if (!hasTrackedNutrients(current)) return [];
-  const thresholds = scale(cropNutrientConsumptionPerPlant(crop), NUTRIENT_WARNING_MULTIPLIER);
-  return NUTRIENT_KEYS.filter(key => current[key] < thresholds[key]);
+  const thresholds = CROP_NUTRIENT_THRESHOLDS[crop.id()] ?? scale(cropNutrientConsumptionPerPlant(crop), 100);
+  return NUTRIENT_KEYS.filter(key => thresholds[key] > 0 && current[key] <= thresholds[key]);
 }
 
 export function nutrientLabel(key: NutrientKey): string {
