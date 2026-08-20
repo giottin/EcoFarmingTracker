@@ -22,6 +22,11 @@ describe('soil nutrient rules', () => {
       .toEqual({nitrogen: 67, phosphorus: 55.5, potassium: 73.5});
   });
 
+  it('keeps an atypical recorded soil reading above 100 percent visible after harvest', () => {
+    expect(calculateFieldNutrientsAfterHarvest({nitrogen: 150, phosphorus: 58, potassium: 81}, crop))
+      .toEqual({nitrogen: 145, phosphorus: 55.5, potassium: 73.5});
+  });
+
   it('keeps legacy fields untracked until a soil reading exists', () => {
     expect(calculateFieldNutrientsAfterHarvest(undefined, crop)).toBeUndefined();
     expect(getNutrientWarnings(undefined, crop)).toEqual([]);

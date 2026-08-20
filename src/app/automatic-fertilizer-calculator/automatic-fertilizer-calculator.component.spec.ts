@@ -60,6 +60,16 @@ describe('AutomaticFertilizerCalculatorComponent', () => {
     expect(component.solution!.final.potassium).toBeLessThanOrEqual(100);
   });
 
+  it('keeps an atypical reading above 100 percent visible without proposing an invalid plan', () => {
+    const component = createComponent();
+    component.current = {nitrogen: 150, phosphorus: 71.2, potassium: 82.8};
+    component.calculate();
+
+    expect(component.current.nitrogen).toBe(150);
+    expect(component.hasExcessNutrients()).toBeTrue();
+    expect(component.solution).toBeNull();
+  });
+
   it('derives claims from the selected field size and always rounds up', () => {
     const component = createComponent();
     component.fields.set([{id: 12, plantCount: () => 451} as unknown as Field]);

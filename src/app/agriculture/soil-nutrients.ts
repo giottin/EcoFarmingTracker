@@ -3,6 +3,9 @@ import {FERTILIZER_DEFINITIONS} from '../fertilizer-plans/fertilizer-data';
 
 /** One farming plot and one land claim always cover a 5 × 5 area. */
 export const PLANTS_PER_CLAIM = 25;
+/** Soil Sampler readings are normally percentages, but atypical readings must
+ * remain visible so a player can spot and correct them. */
+export const MAX_TRACKED_NUTRIENT = 999;
 
 export type Nutrients = {nitrogen: number; phosphorus: number; potassium: number};
 export type NutrientKey = keyof Nutrients;
@@ -48,6 +51,17 @@ export function clampNutrients(nutrients: Nutrients): Nutrients {
     nitrogen: clamp(nutrients.nitrogen),
     phosphorus: clamp(nutrients.phosphorus),
     potassium: clamp(nutrients.potassium)
+  };
+}
+
+/** Keeps a manually recorded Soil Sampler reading without turning a value
+ * above 100 % into a different value. Calculated fertilizer targets continue
+ * to use clampNutrients() and therefore cannot exceed 100 %. */
+export function clampTrackedNutrients(nutrients: Nutrients): Nutrients {
+  return {
+    nitrogen: clampTracked(nutrients.nitrogen),
+    phosphorus: clampTracked(nutrients.phosphorus),
+    potassium: clampTracked(nutrients.potassium)
   };
 }
 
@@ -117,7 +131,7 @@ function add(left: Nutrients, right: Nutrients): Nutrients {
 }
 
 function subtract(left: Nutrients, right: Nutrients): Nutrients {
-  return clampNutrients({
+  return clampTrackedNutrients({
     nitrogen: left.nitrogen - right.nitrogen,
     phosphorus: left.phosphorus - right.phosphorus,
     potassium: left.potassium - right.potassium
@@ -134,6 +148,10 @@ function scale(nutrients: Nutrients, multiplier: number): Nutrients {
 
 function clamp(value: number): number {
   return Math.min(100, Math.max(0, finiteNonNegative(value)));
+}
+
+function clampTracked(value: number): number {
+  return Math.min(MAX_TRACKED_NUTRIENT, Math.max(0, finiteNonNegative(value)));
 }
 
 function finiteNonNegative(value: number): number {

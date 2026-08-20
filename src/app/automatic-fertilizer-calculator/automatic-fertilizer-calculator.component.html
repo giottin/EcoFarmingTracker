@@ -29,10 +29,14 @@
   </div>
 
   <div class="soil-grid nutrient-inputs">
-    <label class="soil-input nitrogen"><span>Azote actuel <em>N · Nitrogen</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
-    <label class="soil-input phosphorus"><span>Phosphore actuel <em>P · Phosphorus</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
-    <label class="soil-input potassium"><span>Potassium actuel <em>K · Potassium</em></span><div><input type="number" min="0" max="100" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input nitrogen"><span>Azote actuel <em>N · Nitrogen</em></span><div><input type="number" min="0" max="999" step="0.1" [(ngModel)]="current.nitrogen" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input phosphorus"><span>Phosphore actuel <em>P · Phosphorus</em></span><div><input type="number" min="0" max="999" step="0.1" [(ngModel)]="current.phosphorus" (ngModelChange)="calculate()"><b>%</b></div></label>
+    <label class="soil-input potassium"><span>Potassium actuel <em>K · Potassium</em></span><div><input type="number" min="0" max="999" step="0.1" [(ngModel)]="current.potassium" (ngModelChange)="calculate()"><b>%</b></div></label>
   </div>
+
+  @if (hasExcessNutrients()) {
+    <p class="plan-hint">Une valeur dépasse 100 %. Elle est conservée pour signaler l’anomalie, mais aucun plan ne peut être calculé tant qu’elle n’est pas revenue à 100 % ou moins.</p>
+  }
 
   @if (solution; as result) {
     <article class="result-card">

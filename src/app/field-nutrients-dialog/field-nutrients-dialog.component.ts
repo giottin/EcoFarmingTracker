@@ -4,7 +4,7 @@ import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
-import {clampNutrients, EMPTY_NUTRIENTS, type NutrientKey, type Nutrients} from '../agriculture/soil-nutrients';
+import {clampTrackedNutrients, EMPTY_NUTRIENTS, type NutrientKey, type Nutrients} from '../agriculture/soil-nutrients';
 
 export type FieldNutrientsDialogData = {
   fieldName: string;
@@ -33,6 +33,6 @@ export class FieldNutrientsDialogComponent {
   }
 
   save() {
-    this.dialogRef.close(clampNutrients(this.values));
+    this.dialogRef.close(clampTrackedNutrients(this.values));
   }
 }

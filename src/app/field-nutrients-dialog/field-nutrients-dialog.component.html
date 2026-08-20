@@ -3,19 +3,19 @@
   <p class="intro">{{ data.fieldName }} · moyenne estimée par claim 5 × 5</p>
   <mat-form-field appearance="outline">
     <mat-label>Azote</mat-label>
-    <input matInput type="number" min="0" max="100" step="0.1" name="nitrogen" [(ngModel)]="values.nitrogen">
+    <input matInput type="number" min="0" max="999" step="0.1" name="nitrogen" [(ngModel)]="values.nitrogen">
     <span matTextSuffix>%</span>
     @if (isWarning('nitrogen')) { <mat-hint class="warning"><span class="material-icons">warning_amber</span>Faible pour cette culture</mat-hint> }
   </mat-form-field>
   <mat-form-field appearance="outline">
     <mat-label>Phosphore</mat-label>
-    <input matInput type="number" min="0" max="100" step="0.1" name="phosphorus" [(ngModel)]="values.phosphorus">
+    <input matInput type="number" min="0" max="999" step="0.1" name="phosphorus" [(ngModel)]="values.phosphorus">
     <span matTextSuffix>%</span>
     @if (isWarning('phosphorus')) { <mat-hint class="warning"><span class="material-icons">warning_amber</span>Faible pour cette culture</mat-hint> }
   </mat-form-field>
   <mat-form-field appearance="outline">
     <mat-label>Potassium</mat-label>
-    <input matInput type="number" min="0" max="100" step="0.1" name="potassium" [(ngModel)]="values.potassium">
+    <input matInput type="number" min="0" max="999" step="0.1" name="potassium" [(ngModel)]="values.potassium">
     <span matTextSuffix>%</span>
     @if (isWarning('potassium')) { <mat-hint class="warning"><span class="material-icons">warning_amber</span>Faible pour cette culture</mat-hint> }
   </mat-form-field>

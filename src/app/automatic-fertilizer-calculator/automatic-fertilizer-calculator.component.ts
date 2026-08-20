@@ -7,7 +7,7 @@ import {FieldService} from '../service/field.service';
 import {CropService} from '../service/crop.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
-import {clampNutrients, hasTrackedNutrients, PLANTS_PER_CLAIM, type Nutrients} from '../agriculture/soil-nutrients';
+import {clampTrackedNutrients, hasTrackedNutrients, PLANTS_PER_CLAIM, type Nutrients} from '../agriculture/soil-nutrients';
 
 export type {Nutrients} from '../agriculture/soil-nutrients';
 type Fertilizer = (typeof FERTILIZER_DEFINITIONS)[number] & {available: boolean};
@@ -54,7 +54,14 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
   }
 
   calculate() {
-    this.current = clampNutrients(this.current);
+    this.current = clampTrackedNutrients(this.current);
+    if (this.hasExcessNutrients()) {
+      this.solution = null;
+      this.planSaved = false;
+      this.planError = false;
+      this.save();
+      return;
+    }
     const scale = 10;
     const capacity = [Math.round((100 - this.current.nitrogen) * scale), Math.round((100 - this.current.phosphorus) * scale), Math.round((100 - this.current.potassium) * scale)];
     const availableFertilizers = this.fertilizers.map((fertilizer, originalIndex) => ({originalIndex, contribution: [Math.round(fertilizer.nitrogen * scale), Math.round(fertilizer.phosphorus * scale), Math.round(fertilizer.potassium * scale)]})).filter(({originalIndex}) => this.fertilizers[originalIndex].available);
@@ -82,6 +89,7 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
 
   quantity(index: number): number { return this.solution?.quantities[index] ?? 0; }
   totalQuantity(index: number): number { return this.quantity(index) * (this.claims() ?? 0); }
+  hasExcessNutrients(): boolean { return Object.values(this.current).some(value => value > 100); }
   format(value: number): string { return Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.', ','); }
   setAvailability(index: number, value: unknown) { this.fertilizers[index].available = value === true; this.calculate(); }
   fieldChanged(value: number | null) {
@@ -131,6 +139,6 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
 
   private save() { localStorage.setItem(this.storageKey, JSON.stringify({fieldId: this.fieldId(), current: this.current, availability: Object.fromEntries(this.fertilizers.map(item => [item.key, item.available]))})); }
   private restore() {
-    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId.set(Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null); this.current = clampNutrients({nitrogen: Number(saved.current?.nitrogen), phosphorus: Number(saved.current?.phosphorus), potassium: Number(saved.current?.potassium)}); for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
+    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId.set(Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null); this.current = clampTrackedNutrients({nitrogen: Number(saved.current?.nitrogen), phosphorus: Number(saved.current?.phosphorus), potassium: Number(saved.current?.potassium)}); for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
   }
 }
