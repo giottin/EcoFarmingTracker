@@ -7,8 +7,9 @@ import {FieldService} from '../service/field.service';
 import {CropService} from '../service/crop.service';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
+import {clampNutrients, hasTrackedNutrients, PLANTS_PER_CLAIM, type Nutrients} from '../agriculture/soil-nutrients';
 
-export type Nutrients = { nitrogen: number; phosphorus: number; potassium: number };
+export type {Nutrients} from '../agriculture/soil-nutrients';
 type Fertilizer = (typeof FERTILIZER_DEFINITIONS)[number] & {available: boolean};
 type Solution = { quantities: number[]; final: Nutrients; total: number; totalDeficit: number; worstDeficit: number };
 
@@ -23,7 +24,7 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
   readonly selectedField = computed(() => this.fields().find(field => field.id === this.fieldId()) ?? null);
   readonly claims = computed<number | null>(() => {
     const count = this.selectedField()?.plantCount();
-    return count && count > 0 ? Math.ceil(count / 25) : null;
+    return count && count > 0 ? Math.ceil(count / PLANTS_PER_CLAIM) : null;
   });
   readonly unavailableCropIcons = signal<ReadonlySet<string>>(new Set());
   fieldId = signal<number | null>(null);
@@ -44,7 +45,7 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
     this.restore();
     this.fields.set(await this.fieldService.getFields());
     await this.fertilizerPlans.load();
-    this.stopWatching = this.fieldService.watchFields(() => void this.refreshFields());
+    this.stopWatching = this.fieldService.watchFields(() => this.refreshFields());
     this.calculate();
   }
 
@@ -53,7 +54,7 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
   }
 
   calculate() {
-    this.current = {nitrogen: this.clamp(this.current.nitrogen), phosphorus: this.clamp(this.current.phosphorus), potassium: this.clamp(this.current.potassium)};
+    this.current = clampNutrients(this.current);
     const scale = 10;
     const capacity = [Math.round((100 - this.current.nitrogen) * scale), Math.round((100 - this.current.phosphorus) * scale), Math.round((100 - this.current.potassium) * scale)];
     const availableFertilizers = this.fertilizers.map((fertilizer, originalIndex) => ({originalIndex, contribution: [Math.round(fertilizer.nitrogen * scale), Math.round(fertilizer.phosphorus * scale), Math.round(fertilizer.potassium * scale)]})).filter(({originalIndex}) => this.fertilizers[originalIndex].available);
@@ -83,7 +84,17 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
   totalQuantity(index: number): number { return this.quantity(index) * (this.claims() ?? 0); }
   format(value: number): string { return Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.', ','); }
   setAvailability(index: number, value: unknown) { this.fertilizers[index].available = value === true; this.calculate(); }
-  fieldChanged(value: number | null) { this.fieldId.set(value === null ? null : Number(value)); this.planSaved = false; this.planError = false; this.calculate(); }
+  fieldChanged(value: number | null) {
+    const fieldId = value === null ? null : Number(value);
+    this.fieldId.set(fieldId);
+    const nutrients = this.fields().find(field => field.id === fieldId)?.soilNutrients();
+    // This is a one-time copy only. The calculator stays freely editable and
+    // never writes its draft values back to the tracked field.
+    if (hasTrackedNutrients(nutrients)) this.current = {...nutrients};
+    this.planSaved = false;
+    this.planError = false;
+    this.calculate();
+  }
   fieldDisplayName(field: Field): string { return field.name().trim() || `Champ sans nom #${field.id}`; }
   fieldCropName(field: Field): string { return this.cropService.getDisplayName(field.crop()); }
   cropIconUrl(field: Field): string { return this.cropService.getIconUrl(field.crop()); }
@@ -103,8 +114,6 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
     this.savingPlan = false; this.planSaved = saved; this.planError = !saved;
   }
 
-  private clamp(value: number): number { return Math.min(100, Math.max(0, this.number(value))); }
-  private number(value: number): number { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : 0; }
   private async refreshFields() {
     const fields = await this.fieldService.getFields();
     this.fields.set(fields);
@@ -113,6 +122,6 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
 
   private save() { localStorage.setItem(this.storageKey, JSON.stringify({fieldId: this.fieldId(), current: this.current, availability: Object.fromEntries(this.fertilizers.map(item => [item.key, item.available]))})); }
   private restore() {
-    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId.set(Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null); this.current = {nitrogen: this.clamp(saved.current?.nitrogen), phosphorus: this.clamp(saved.current?.phosphorus), potassium: this.clamp(saved.current?.potassium)}; for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
+    try { const saved = JSON.parse(localStorage.getItem(this.storageKey) ?? 'null'); if (!saved) return; this.fieldId.set(Number.isInteger(saved.fieldId) && saved.fieldId > 0 ? saved.fieldId : null); this.current = clampNutrients({nitrogen: Number(saved.current?.nitrogen), phosphorus: Number(saved.current?.phosphorus), potassium: Number(saved.current?.potassium)}); for (const fertilizer of this.fertilizers) { const available = saved.availability?.[fertilizer.key] ?? saved.availability?.[fertilizer.label]; if (typeof available === 'boolean') fertilizer.available = available; } } catch { localStorage.removeItem(this.storageKey); }
   }
 }

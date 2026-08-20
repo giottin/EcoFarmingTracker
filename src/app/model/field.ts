@@ -1,6 +1,8 @@
 import {Crop} from './crop';
 import {Duration} from './duration';
 import {signal} from '@angular/core';
+import type {Nutrients} from '../agriculture/soil-nutrients';
+import {calculateFieldNutrientsAfterHarvest} from '../agriculture/soil-nutrients';
 
 export class Field {
   id: number;
@@ -10,6 +12,8 @@ export class Field {
   harvestTime = signal<Date | undefined>(undefined);
   selfRegenFullyGrown = signal(false);
   plantCount = signal<number | undefined>(undefined);
+  /** Undefined keeps existing fields compatible until their first soil reading. */
+  soilNutrients = signal<Nutrients | undefined>(undefined);
 
   isPlanted = signal(false);
 
@@ -29,7 +33,8 @@ export class Field {
       harvestTime: this.harvestTime(),
       selfRegenFullyGrown: this.selfRegenFullyGrown(),
       isPlanted: this.isPlanted(),
-      plantCount: this.plantCount()
+      plantCount: this.plantCount(),
+      soilNutrients: this.soilNutrients()
     }
   }
 
@@ -39,11 +44,22 @@ export class Field {
   }
 
   onHarvest() {
+    const nutrients = calculateFieldNutrientsAfterHarvest(this.soilNutrients(), this.crop());
+    if (nutrients) this.soilNutrients.set(nutrients);
     if (this.crop().regenerates()) {
       this.harvestRegenerating();
     } else {
       this.harvest();
     }
+  }
+
+  restoreSavedState(stored: StoredField) {
+    this.plantTime.set(stored.plantTime);
+    this.harvestTime.set(stored.harvestTime);
+    this.selfRegenFullyGrown.set(stored.selfRegenFullyGrown);
+    this.isPlanted.set(stored.isPlanted);
+    this.plantCount.set(stored.plantCount);
+    this.soilNutrients.set(stored.soilNutrients);
   }
 
   private plant(growthMultiplier = 1) {
@@ -84,5 +100,6 @@ export type StoredField = {
   harvestTime: Date | undefined,
   selfRegenFullyGrown: boolean,
   isPlanted: boolean,
-  plantCount: number | undefined
+  plantCount: number | undefined,
+  soilNutrients: Nutrients | undefined
 }

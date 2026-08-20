@@ -9,6 +9,9 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {StorageService} from '../../service/storage.service';
 import {FertilizerPlansService} from '../../service/fertilizer-plans.service';
+import {MatDialog} from '@angular/material/dialog';
+import {FieldNutrientsDialogComponent} from '../../field-nutrients-dialog/field-nutrients-dialog.component';
+import {calculateFieldNutrientsAfterFertilization, getNutrientWarnings, hasTrackedNutrients} from '../../agriculture/soil-nutrients';
 
 @Component({
   selector: 'app-field-row',
@@ -24,6 +27,10 @@ export class FieldRowComponent {
 
   readonly activeFertilizerPlan = computed(() => this.fertilizerPlans.plans().find(plan => plan.fieldId === this.field().id) ?? null);
   readonly needsFertilizing = computed(() => this.activeFertilizerPlan() !== null);
+  readonly nutrientWarnings = computed(() => getNutrientWarnings(this.field().soilNutrients(), this.field().crop()));
+  readonly hasTrackedNutrients = computed(() => hasTrackedNutrients(this.field().soilNutrients()));
+  readonly harvesting = signal(false);
+  readonly fertilizing = signal(false);
   readonly fieldStatus = computed<'growing' | 'ready' | 'harvested' | 'fertilizing'>(() => {
     if (!this.field().isPlanted() || !this.field().harvestTime()) return this.needsFertilizing() ? 'fertilizing' : 'harvested';
     return this.field().harvestTime()!.getTime() <= this.now() ? 'ready' : 'growing';
@@ -58,7 +65,8 @@ export class FieldRowComponent {
   constructor(
     private readonly cropService: CropService,
     private readonly storageService: StorageService,
-    private readonly fertilizerPlans: FertilizerPlansService
+    private readonly fertilizerPlans: FertilizerPlansService,
+    private readonly dialog: MatDialog
   ) {
     this.cropOptions.set(this.cropService.allCrops);
   }
@@ -110,13 +118,58 @@ export class FieldRowComponent {
     this.save();
   }
 
-  onHarvest() {
+  async onHarvest() {
+    if (this.harvesting() || this.fieldStatus() !== 'ready') return;
+    this.harvesting.set(true);
+    const before = this.field().serialize();
     this.field().onHarvest();
-    this.save();
+    try {
+      const saved = await this.storageService.saveFieldNow(this.field(), this.sortOrder());
+      if (!saved) this.field().restoreSavedState(before);
+    } finally {
+      this.harvesting.set(false);
+    }
   }
 
   async onFertilize() {
-    await this.fertilizerPlans.completeForField(this.field().id);
+    if (this.fertilizing()) return;
+    const plan = this.fertilizerPlans.getForField(this.field().id);
+    if (!plan) return;
+    this.fertilizing.set(true);
+    try {
+      const next = calculateFieldNutrientsAfterFertilization(this.field().soilNutrients(), plan.lines, plan.nutrients);
+      if (!next) return;
+      const before = this.field().serialize();
+      this.field().soilNutrients.set(next);
+      const saved = await this.storageService.saveFieldNow(this.field(), this.sortOrder());
+      if (!saved) {
+        this.field().restoreSavedState(before);
+        return;
+      }
+      await this.fertilizerPlans.remove(plan.id);
+    } finally {
+      this.fertilizing.set(false);
+    }
+  }
+
+  openNutrients() {
+    const field = this.field();
+    const ref = this.dialog.open(FieldNutrientsDialogComponent, {
+      width: '24rem',
+      maxWidth: '92vw',
+      data: {
+        fieldName: field.name().trim() || this.fieldPlaceholder(),
+        nutrients: field.soilNutrients(),
+        warnings: this.nutrientWarnings()
+      }
+    });
+    ref.afterClosed().subscribe(async nutrients => {
+      if (!nutrients) return;
+      const before = field.serialize();
+      field.soilNutrients.set(nutrients);
+      const saved = await this.storageService.saveFieldNow(field, this.sortOrder());
+      if (!saved) field.restoreSavedState(before);
+    });
   }
 
   private save() {

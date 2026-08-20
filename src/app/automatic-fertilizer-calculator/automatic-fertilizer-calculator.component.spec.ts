@@ -68,6 +68,18 @@ describe('AutomaticFertilizerCalculatorComponent', () => {
     expect(component.claims()).toBe(19);
   });
 
+  it('copies a selected field’s tracked nutrients once without changing the field afterwards', () => {
+    const component = createComponent();
+    const nutrients = {nitrogen: 42, phosphorus: 61, potassium: 37};
+    component.fields.set([{id: 18, plantCount: () => 25, soilNutrients: () => nutrients} as unknown as Field]);
+
+    component.fieldChanged(18);
+    component.current.nitrogen = 45;
+
+    expect(component.current).toEqual({nitrogen: 45, phosphorus: 61, potassium: 37});
+    expect(nutrients).toEqual({nitrogen: 42, phosphorus: 61, potassium: 37});
+  });
+
   it('saves the exact current quantities against the selected field', async () => {
     const addOrReplace = jasmine.createSpy('addOrReplace').and.resolveTo(true);
     const component = new AutomaticFertilizerCalculatorComponent(

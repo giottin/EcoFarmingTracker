@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Field, StoredField} from '../model/field';
 import {SupabaseService} from './supabase.service';
+import type {Nutrients} from '../agriculture/soil-nutrients';
 
 type FieldRow = {
   id: number;
@@ -11,6 +12,9 @@ type FieldRow = {
   self_regen_fully_grown: boolean;
   is_planted: boolean;
   plant_count: number | null;
+  nitrogen: number | null;
+  phosphorus: number | null;
+  potassium: number | null;
   sort_order: number;
 };
 
@@ -49,7 +53,7 @@ export class StorageService {
   async getStoredFields(): Promise<StoredField[]> {
     const {data, error} = await this.supabase.client
       .from('farming_fields')
-      .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, plant_count, sort_order')
+      .select('id, name, crop_id, plant_time, harvest_time, self_regen_fully_grown, is_planted, plant_count, nitrogen, phosphorus, potassium, sort_order')
       .order('sort_order', {ascending: true})
       .order('id', {ascending: true});
     // Never let a failed network request masquerade as an actual empty list.
@@ -82,6 +86,14 @@ export class StorageService {
     }, 300));
   }
 
+  /** Saves an important state transition before any dependent operation continues. */
+  async saveFieldNow(field: Field, sortOrder = 0): Promise<boolean> {
+    const timer = this.saveTimers.get(field.id);
+    if (timer) clearTimeout(timer);
+    this.saveTimers.delete(field.id);
+    return this.updateField(field, sortOrder);
+  }
+
   async deleteField(id: number) {
     const timer = this.saveTimers.get(id);
     if (timer) clearTimeout(timer);
@@ -103,14 +115,18 @@ export class StorageService {
     return () => clearInterval(timer);
   }
 
-  private async updateField(field: Field, sortOrder: number) {
+  private async updateField(field: Field, sortOrder: number): Promise<boolean> {
     this.beginWrite(field.id);
     try {
       const {error} = await this.supabase.client
         .from('farming_fields')
         .update(this.toRow(field, sortOrder))
         .eq('id', field.id);
-      if (error) console.error('Unable to save field', {fieldId: field.id, error});
+      if (error) {
+        console.error('Unable to save field', {fieldId: field.id, error});
+        return false;
+      }
+      return true;
     } finally {
       this.finishWrite(field.id);
     }
@@ -136,6 +152,9 @@ export class StorageService {
       self_regen_fully_grown: stored.selfRegenFullyGrown,
       is_planted: stored.isPlanted,
       plant_count: stored.plantCount ?? null,
+      nitrogen: stored.soilNutrients?.nitrogen ?? null,
+      phosphorus: stored.soilNutrients?.phosphorus ?? null,
+      potassium: stored.soilNutrients?.potassium ?? null,
       sort_order: sortOrder,
       updated_at: new Date().toISOString()
     };
@@ -150,7 +169,18 @@ export class StorageService {
       harvestTime: row.harvest_time ? new Date(row.harvest_time) : undefined,
       selfRegenFullyGrown: row.self_regen_fully_grown,
       isPlanted: row.is_planted,
-      plantCount: row.plant_count === null ? undefined : Number(row.plant_count)
+      plantCount: row.plant_count === null ? undefined : Number(row.plant_count),
+      soilNutrients: this.toNutrients(row)
     };
+  }
+
+  private toNutrients(row: FieldRow): Nutrients | undefined {
+    if (row.nitrogen === null || row.phosphorus === null || row.potassium === null) return undefined;
+    const nutrients = {
+      nitrogen: Number(row.nitrogen),
+      phosphorus: Number(row.phosphorus),
+      potassium: Number(row.potassium)
+    };
+    return Object.values(nutrients).every(value => Number.isFinite(value)) ? nutrients : undefined;
   }
 }

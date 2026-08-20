@@ -53,4 +53,17 @@ describe('Field harvest behavior', () => {
     expect(field.serialize().isPlanted).toBeTrue();
     expect(field.serialize().harvestTime?.toISOString()).toBe(harvestTime);
   });
+
+  it('deducts nutrients once per harvest while keeping a persistent crop planted', () => {
+    const cotton = new Crop('cotton', 'Cotton', true, fullGrowth, '', {nitrogen: .1, phosphorus: .15, potassium: .2});
+    const field = new Field(1, cotton);
+    field.soilNutrients.set({nitrogen: 72, phosphorus: 58, potassium: 81});
+    field.onPlant();
+
+    field.onHarvest();
+
+    expect(field.soilNutrients()).toEqual({nitrogen: 69.5, phosphorus: 54.25, potassium: 76});
+    expect(field.isPlanted()).toBeTrue();
+    expect(field.harvestTime()?.toISOString()).toBe('2026-08-14T02:24:00.000Z');
+  });
 });

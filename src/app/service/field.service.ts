@@ -37,6 +37,10 @@ export class FieldService {
     return this.storageService.hasPendingWrites();
   }
 
+  async saveFieldNow(field: Field, sortOrder = 0): Promise<boolean> {
+    return this.storageService.saveFieldNow(field, sortOrder);
+  }
+
   private deserializeField(storedField: StoredField): Field | undefined {
     const crop = this.cropService.getCropById(storedField.cropId);
     if (!crop) return undefined;
@@ -47,6 +51,7 @@ export class FieldService {
     field.selfRegenFullyGrown.set(storedField.selfRegenFullyGrown);
     field.isPlanted.set(storedField.isPlanted);
     field.plantCount.set(storedField.plantCount);
+    field.soilNutrients.set(storedField.soilNutrients);
     return field;
   }
 }

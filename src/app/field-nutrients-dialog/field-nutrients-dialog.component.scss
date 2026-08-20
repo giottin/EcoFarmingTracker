@@ -1,0 +1,9 @@
+:host { display: block; color: #eef6f4; background: #122221; }
+h2 { margin: 0; color: #d7fffa; }
+mat-dialog-content { display: grid; min-width: min(22rem, 78vw); gap: .25rem; padding-top: .25rem; }
+.intro, .hint { margin: 0 0 .65rem; color: rgba(238,246,244,.7); font-size: .84rem; }
+mat-form-field { width: 100%; }
+.warning { display: inline-flex; align-items: center; gap: .25rem; color: #ffca6b; font-weight: 700; }
+.warning .material-icons { font-size: 1rem; }
+.hint { margin: .2rem 0 0; font-size: .76rem; line-height: 1.35; }
+.save-button { color: #062422 !important; background: #80cbc4 !important; }

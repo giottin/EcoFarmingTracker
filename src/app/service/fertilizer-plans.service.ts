@@ -1,7 +1,8 @@
 import {Injectable, signal} from '@angular/core';
 import {SupabaseService} from './supabase.service';
+import type {Nutrients} from '../agriculture/soil-nutrients';
 
-export type PlanNutrients = {nitrogen: number; phosphorus: number; potassium: number};
+export type PlanNutrients = Nutrients;
 export type FertilizerPlanLine = {key: string; label: string; iconName: string; perClaim: number; total: number};
 export type FertilizerPlanDraft = {fieldId: number; fieldName: string; claims: number; nutrients: PlanNutrients; lines: FertilizerPlanLine[]};
 export type FertilizerPlan = FertilizerPlanDraft & {id: number; createdAt: Date};
@@ -57,9 +58,13 @@ export class FertilizerPlansService {
   }
 
   async completeForField(fieldId: number): Promise<boolean> {
-    const plan = this.plans().find(candidate => candidate.fieldId === fieldId);
+    const plan = this.getForField(fieldId);
     if (!plan) return true;
     return this.remove(plan.id);
+  }
+
+  getForField(fieldId: number): FertilizerPlan | null {
+    return this.plans().find(candidate => candidate.fieldId === fieldId) ?? null;
   }
 
   private fromRow(row: FertilizerPlanRow): FertilizerPlan {
@@ -74,4 +79,3 @@ export class FertilizerPlansService {
     };
   }
 }
-

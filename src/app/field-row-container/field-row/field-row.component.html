@@ -22,9 +22,12 @@
     </mat-form-field>
     <label class="plant-count" title="Nombre de plantes ou emplacements cultivés">
       <span class="material-icons" aria-hidden="true">grass</span>
-      <input type="number" min="1" step="1" inputmode="numeric" name="field-plant-count" [ngModel]="field().plantCount()" (ngModelChange)="onPlantCountChange($event)" placeholder="—" aria-label="Nombre de plantes ou emplacements">
-      <span>plantes</span>
+      <input type="number" min="1" step="1" inputmode="numeric" name="field-plant-count" [ngModel]="field().plantCount()" (ngModelChange)="onPlantCountChange($event)" placeholder="Taille" aria-label="Taille du champ en plantes ou emplacements">
     </label>
+    <button type="button" class="nutrient-button" [class.needs-attention]="nutrientWarnings().length > 0" [class.is-untracked]="!hasTrackedNutrients()" (click)="openNutrients()" aria-label="Voir ou modifier les nutriments du sol" title="Nutriments du sol">
+      <span class="material-icons" aria-hidden="true">science</span>
+      @if (nutrientWarnings().length > 0) { <span class="nutrient-alert" aria-label="Nutriment faible">!</span> }
+    </button>
     <div class="maturity-panel" aria-live="polite">
       @switch (fieldStatus()) {
         @case ('growing') {
@@ -55,8 +58,8 @@
       <button type="button" mat-stroked-button class="talent-button" (click)="onGentlePlant()" [disabled]="needsFertilizing() && !field().isPlanted()" title="Gentle Seeding : commence à 20 % de maturité">Replanter + talent</button>
     </div>
     <div class="harvest-action">
-      <button type="button" mat-stroked-button (click)="onHarvest()" [disabled]="!field().isPlanted()">Récolter</button>
-      @if (needsFertilizing()) { <button type="button" mat-stroked-button class="fertilize-button" (click)="onFertilize()">Fertiliser</button> }
+      <button type="button" mat-stroked-button (click)="onHarvest()" [disabled]="fieldStatus() !== 'ready' || harvesting()">Récolter</button>
+      @if (needsFertilizing()) { <button type="button" mat-stroked-button class="fertilize-button" (click)="onFertilize()" [disabled]="fertilizing()">{{ fertilizing() ? 'Mise à jour…' : 'Fertiliser' }}</button> }
     </div>
     <div class="mx-2 flex items-center">
       <span class="material-icons cursor-pointer hover:opacity-80" (click)="rowClosed.emit(field())">close</span>
