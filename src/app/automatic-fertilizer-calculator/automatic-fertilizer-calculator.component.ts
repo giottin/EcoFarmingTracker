@@ -90,7 +90,9 @@ export class AutomaticFertilizerCalculatorComponent implements OnInit, OnDestroy
     const nutrients = this.fields().find(field => field.id === fieldId)?.soilNutrients();
     // This is a one-time copy only. The calculator stays freely editable and
     // never writes its draft values back to the tracked field.
-    if (hasTrackedNutrients(nutrients)) this.current = {...nutrients};
+    this.current = hasTrackedNutrients(nutrients)
+      ? {...nutrients}
+      : {nitrogen: 0, phosphorus: 0, potassium: 0};
     this.planSaved = false;
     this.planError = false;
     this.calculate();
