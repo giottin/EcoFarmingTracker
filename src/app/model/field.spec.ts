@@ -66,4 +66,19 @@ describe('Field harvest behavior', () => {
     expect(field.isPlanted()).toBeTrue();
     expect(field.harvestTime()?.toISOString()).toBe('2026-08-14T02:24:00.000Z');
   });
+
+  it('deducts the persistent huckleberry consumption once during each completed regrowth cycle', () => {
+    const huckleberries = new Crop('huckleberries', 'Huckleberries', true, fullGrowth, '', {nitrogen: .1, phosphorus: .15, potassium: .2});
+    const field = new Field(1, huckleberries);
+    field.soilNutrients.set({nitrogen: 150, phosphorus: 150, potassium: 150});
+    field.onPlant();
+
+    jasmine.clock().tick((28 * 60 + 48) * 60 * 1000);
+    field.onHarvest();
+    jasmine.clock().tick((14 * 60 + 24) * 60 * 1000);
+    field.onHarvest();
+
+    expect(field.soilNutrients()).toEqual({nitrogen: 145, phosphorus: 142.5, potassium: 140});
+    expect(field.isPlanted()).toBeTrue();
+  });
 });

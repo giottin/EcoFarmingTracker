@@ -76,7 +76,7 @@ const crop = (id: string, name: string, regenerates: boolean, iconName: string, 
 
 // Values from ECO's installed AutoGen/Plant ResourceConstraints (MaxResourceContent),
 // expressed as the soil-sampler percentage consumed by one plant.
-const ALL_CROPS: Crop[] = [
+export const ALL_CROPS: Crop[] = [
   crop('agave', 'Agave', false, 'AgaveLeavesItem', {nitrogen: 0, phosphorus: .2, potassium: 0}),
   crop('beans', 'Beans', false, 'BeansItem', {nitrogen: .1, phosphorus: .2, potassium: .2}),
   crop('beets', 'Beets', false, 'BeetItem', {nitrogen: .2, phosphorus: .3, potassium: .4}),

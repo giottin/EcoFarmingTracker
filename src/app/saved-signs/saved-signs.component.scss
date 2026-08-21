@@ -1,16 +1,23 @@
 :host { display: block; }
 .saved-shell { width: min(100% - 2rem, 72rem); margin: 1.5rem auto 3rem; }
+.library-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
 .eyebrow { color: #80cbc4; font-size: .75rem; font-weight: 700; letter-spacing: .18em; }
 h2 { margin: .35rem 0 .25rem; font-size: clamp(1.8rem, 4vw, 2.6rem); }
 p { margin: 0; color: rgba(255,255,255,.65); }
-.sign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-.sign-card { position: relative; min-height: 12rem; padding: 1rem; overflow: hidden; border: 1px solid rgba(128,203,196,.2); border-radius: 1rem; outline: none; background: linear-gradient(145deg, rgba(128,203,196,.08), rgba(255,255,255,.025)); cursor: pointer; transition: transform .18s ease, border-color .18s ease; }
-.sign-card:hover, .sign-card:focus-visible { transform: translateY(-2px); border-color: #80cbc4; }
-.sign-preview { box-sizing: border-box; min-height: 8.5rem; max-height: 16rem; padding: .8rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: .6rem; color: #d7fffb; background: #071213; font-size: .9rem; line-height: 1.45; }
-.delete-sign { position: absolute; z-index: 1; top: .45rem; right: .45rem; display: grid; width: 1.7rem; height: 1.7rem; padding: 0; place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; color: white; background: #412426; cursor: pointer; font-size: 1.2rem; }
-.delete-sign:hover { background: #7a3033; }
-footer { display: flex; justify-content: space-between; gap: .75rem; margin-top: .65rem; color: rgba(255,255,255,.42); font-size: .68rem; }
-footer strong { color: #80cbc4; }
-.empty-state, .state { margin-top: 1.5rem; padding: 3rem 1rem; text-align: center; border: 1px dashed rgba(128,203,196,.22); border-radius: 1rem; }
-.empty-state .material-icons { color: #80cbc4; font-size: 2.5rem; }.empty-state h3 { margin: .5rem 0; }
-@media (max-width: 640px) { .saved-shell { width: calc(100% - 1rem); margin-top: 1rem; } .sign-grid { grid-template-columns: 1fr; gap: .7rem; } .sign-card { min-height: 10rem; padding: .7rem; } .sign-preview { min-height: 7.5rem; max-height: 14rem; } }
+.new-folder { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .45rem; padding: .65rem .85rem; border: 1px solid rgba(128,203,196,.4); border-radius: .65rem; color: #071213; background: #80cbc4; cursor: pointer; font: inherit; font-weight: 800; }
+.folder-section { margin-top: 1.35rem; overflow: hidden; border: 1px solid rgba(128,203,196,.2); border-radius: 1rem; background: linear-gradient(145deg, rgba(128,203,196,.055), rgba(255,255,255,.018)); }
+.folder-section.drop-target { border-color: #80cbc4; background: rgba(128,203,196,.12); box-shadow: 0 0 0 2px rgba(128,203,196,.15) inset; }
+.folder-header { display: flex; align-items: center; justify-content: space-between; min-height: 4rem; gap: .75rem; padding: .6rem .85rem; }
+.folder-toggle { display: inline-flex; min-width: 0; align-items: center; gap: .35rem; padding: .25rem; border: 0; color: inherit; background: transparent; cursor: pointer; text-align: left; }
+.folder-name { display: flex; min-width: 0; align-items: center; gap: .6rem; }.folder-name > div, .folder-name strong { display: grid; gap: .08rem; }.folder-name h3, .folder-name strong { margin: 0; color: #e6fffc; font-size: 1rem; }.folder-name small { color: rgba(255,255,255,.48); font-size: .72rem; }.folder-icon, .unfiled .folder-name > .material-icons { color: #80cbc4; }
+.folder-actions { display: flex; align-items: center; gap: .35rem; }.folder-actions button { display: grid; width: 2rem; height: 2rem; padding: 0; place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: .5rem; color: #b2dfdb; background: transparent; cursor: pointer; }.folder-actions .delete-folder { color: #ffb4ab; }
+.drop-hint { color: rgba(128,203,196,.65); font-size: .72rem; opacity: 0; }.drop-target .drop-hint { opacity: 1; }
+.sign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; padding: .1rem .85rem .85rem; }
+.sign-card { position: relative; min-height: 13.3rem; padding: 1rem; overflow: hidden; border: 1px solid rgba(128,203,196,.2); border-radius: .85rem; outline: none; background: linear-gradient(145deg, rgba(128,203,196,.08), rgba(255,255,255,.025)); cursor: grab; }.sign-card:hover, .sign-card:focus-visible { border-color: #80cbc4; }.sign-card.dragging { opacity: .42; }
+.sign-preview { box-sizing: border-box; min-height: 8.2rem; max-height: 16rem; padding: .8rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; border-radius: .6rem; color: #d7fffb; background: #071213; font-size: .9rem; line-height: 1.45; }
+.delete-sign { position: absolute; z-index: 1; top: .45rem; right: .45rem; display: grid; width: 1.7rem; height: 1.7rem; padding: 0; place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; color: white; background: #412426; cursor: pointer; font-size: 1.2rem; }.delete-sign:hover { background: #7a3033; }
+footer { display: flex; justify-content: space-between; gap: .75rem; margin-top: .65rem; color: rgba(255,255,255,.42); font-size: .68rem; }footer strong { color: #80cbc4; }
+.move-select { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .7rem; color: rgba(255,255,255,.55); font-size: .7rem; }.move-select select { max-width: 11rem; padding: .28rem .35rem; border: 1px solid rgba(128,203,196,.25); border-radius: .35rem; color: #d7fffb; background: #132322; }
+.folder-empty { padding: .1rem .85rem 1rem; color: rgba(255,255,255,.48); font-size: .82rem; }
+.empty-state, .state { margin-top: 1.5rem; padding: 3rem 1rem; text-align: center; border: 1px dashed rgba(128,203,196,.22); border-radius: 1rem; }.empty-state .material-icons { color: #80cbc4; font-size: 2.5rem; }.empty-state h3 { margin: .5rem 0; }
+@media (max-width: 640px) { .saved-shell { width: calc(100% - 1rem); margin-top: 1rem; }.library-heading { align-items: flex-start; flex-direction: column; }.folder-section { margin-top: .9rem; }.folder-header { padding: .55rem .65rem; }.folder-actions .drop-hint { display: none; }.sign-grid { grid-template-columns: 1fr; gap: .7rem; padding: .05rem .65rem .65rem; }.sign-card { min-height: 11.5rem; padding: .7rem; }.sign-preview { min-height: 7rem; max-height: 14rem; }.move-select { font-size: .72rem; }.move-select select { max-width: 62%; } }

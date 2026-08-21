@@ -1,19 +1,29 @@
-import {Component, OnInit, signal} from '@angular/core';
+import {Component, computed, OnInit, signal} from '@angular/core';
+import {NgTemplateOutlet} from '@angular/common';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {SavedSign, SavedSignsService} from '../service/saved-signs.service';
+import {SavedSign, SavedSignFolder, SavedSignsService} from '../service/saved-signs.service';
 
 @Component({
   selector: 'app-saved-signs',
+  imports: [NgTemplateOutlet],
   templateUrl: './saved-signs.component.html',
   styleUrl: './saved-signs.component.scss'
 })
 export class SavedSignsComponent implements OnInit {
   readonly copiedId = signal<number | null>(null);
+  readonly draggedId = signal<number | null>(null);
+  readonly dropTargetFolderId = signal<number | null | undefined>(undefined);
+  readonly unfiledSigns = computed(() => this.savedSigns.signs().filter(sign => sign.folderId === null));
   private readonly previewCache = new Map<string, SafeHtml>();
+  private suppressCopyUntil = 0;
 
   constructor(readonly savedSigns: SavedSignsService, private readonly sanitizer: DomSanitizer) {}
 
   ngOnInit() { void this.savedSigns.load(); }
+
+  signsForFolder(folderId: number): SavedSign[] {
+    return this.savedSigns.signs().filter(sign => sign.folderId === folderId);
+  }
 
   preview(content: string): SafeHtml {
     const cached = this.previewCache.get(content);
@@ -24,6 +34,7 @@ export class SavedSignsComponent implements OnInit {
   }
 
   async copy(sign: SavedSign) {
+    if (Date.now() < this.suppressCopyUntil) return;
     try {
       await navigator.clipboard.writeText(sign.content);
       this.copiedId.set(sign.id);
@@ -34,6 +45,79 @@ export class SavedSignsComponent implements OnInit {
   async remove(event: MouseEvent, sign: SavedSign) {
     event.stopPropagation();
     await this.savedSigns.remove(sign.id);
+  }
+
+  async newFolder() {
+    const name = window.prompt('Nom du nouveau dossier');
+    if (name !== null) await this.savedSigns.addFolder(name);
+  }
+
+  async renameFolder(event: MouseEvent, folder: SavedSignFolder) {
+    event.stopPropagation();
+    const name = window.prompt('Nouveau nom du dossier', folder.name);
+    if (name !== null) await this.savedSigns.renameFolder(folder.id, name);
+  }
+
+  async removeFolder(event: MouseEvent, folder: SavedSignFolder) {
+    event.stopPropagation();
+    if (!window.confirm(`Supprimer le dossier « ${folder.name} » ? Ses panneaux resteront dans « Sans dossier ».`)) return;
+    await this.savedSigns.removeFolder(folder.id);
+  }
+
+  async toggleFolder(folder: SavedSignFolder) {
+    await this.savedSigns.setFolderCollapsed(folder.id, !folder.collapsed);
+  }
+
+  dragStart(event: DragEvent, sign: SavedSign) {
+    this.draggedId.set(sign.id);
+    this.dropTargetFolderId.set(undefined);
+    event.dataTransfer?.setData('text/plain', String(sign.id));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  dragOver(event: DragEvent, folderId: number | null) {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dropTargetFolderId.set(folderId);
+  }
+
+  dragLeave(event: DragEvent, folderId: number | null) {
+    const current = event.currentTarget as HTMLElement;
+    const related = event.relatedTarget;
+    if (!related || !current.contains(related as Node)) {
+      if (this.dropTargetFolderId() === folderId) this.dropTargetFolderId.set(undefined);
+    }
+  }
+
+  async drop(event: DragEvent, folderId: number | null) {
+    event.preventDefault();
+    event.stopPropagation();
+    const signId = this.draggedId();
+    const sign = signId === null ? undefined : this.savedSigns.signs().find(current => current.id === signId);
+    if (sign && sign.folderId !== folderId) await this.savedSigns.moveToFolder(sign.id, folderId);
+    this.finishDrag();
+  }
+
+  dragEnd() { this.finishDrag(); }
+
+  async moveFromSelect(event: Event, sign: SavedSign) {
+    event.stopPropagation();
+    const value = (event.target as HTMLSelectElement).value;
+    const folderId = value === '' ? null : Number(value);
+    if (folderId === null && sign.folderId !== null) await this.savedSigns.moveToFolder(sign.id, null);
+    if (Number.isInteger(folderId) && sign.folderId !== folderId) await this.savedSigns.moveToFolder(sign.id, folderId);
+  }
+
+  isDropTarget(folderId: number | null): boolean {
+    return this.draggedId() !== null && this.dropTargetFolderId() === folderId;
+  }
+
+  private finishDrag() {
+    this.draggedId.set(null);
+    this.dropTargetFolderId.set(undefined);
+    // Browsers can emit a click immediately after dragend. Ignore only that
+    // short trailing click; a normal click keeps copying the exact command.
+    this.suppressCopyUntil = Date.now() + 350;
   }
 
   private renderPreview(content: string): string {
@@ -98,8 +182,6 @@ export class SavedSignsComponent implements OnInit {
     const blue = Number.parseInt(hex.slice(4, 6), 16);
     const alpha = Number.parseInt(hex.slice(6, 8), 16) / 255;
 
-    // Une opacité ECO très faible reste légèrement visible dans la bibliothèque,
-    // afin que la carte n'efface jamais une ligne de la commande sauvegardée.
     const previewAlpha = Math.max(0.34, alpha).toFixed(2);
     return `rgba(${red},${green},${blue},${previewAlpha})`;
   }

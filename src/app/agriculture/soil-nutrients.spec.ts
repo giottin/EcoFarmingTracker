@@ -1,5 +1,6 @@
 import {Crop} from '../model/crop';
 import {Duration} from '../model/duration';
+import {ALL_CROPS} from '../service/crop.service';
 import {
   calculateFertilizerContributionPerClaim,
   calculateFieldNutrientsAfterFertilization,
@@ -26,6 +27,19 @@ describe('soil nutrient rules', () => {
     expect(calculateFieldNutrientsAfterHarvest({nitrogen: 150, phosphorus: 58, potassium: 81}, crop))
       .toEqual({nitrogen: 145, phosphorus: 55.5, potassium: 73.5});
   });
+
+  for (const [cropId, expected] of [
+    ['rice', {nitrogen: 147.5, phosphorus: 150, potassium: 150}],
+    ['beets', {nitrogen: 145, phosphorus: 142.5, potassium: 140}],
+    ['corn', {nitrogen: 140, phosphorus: 140, potassium: 147.5}],
+    ['wheat', {nitrogen: 142.5, phosphorus: 147.5, potassium: 147.5}],
+    ['huckleberries', {nitrogen: 147.5, phosphorus: 146.25, potassium: 145}]
+  ] as const) {
+    it(`uses ${cropId}'s own N/P/K consumption for one 25-plant claim`, () => {
+      const currentCrop = ALL_CROPS.find(candidate => candidate.id() === cropId)!;
+      expect(calculateFieldNutrientsAfterHarvest({nitrogen: 150, phosphorus: 150, potassium: 150}, currentCrop)).toEqual(expected);
+    });
+  }
 
   it('keeps legacy fields untracked until a soil reading exists', () => {
     expect(calculateFieldNutrientsAfterHarvest(undefined, crop)).toBeUndefined();

@@ -5,6 +5,9 @@ import { Field } from '../../model/field';
 import { CropService } from '../../service/crop.service';
 import {signal} from '@angular/core';
 import {FertilizerPlansService} from '../../service/fertilizer-plans.service';
+import {StorageService} from '../../service/storage.service';
+import {Crop} from '../../model/crop';
+import {Duration} from '../../model/duration';
 
 describe('FieldRowComponent', () => {
   let component: FieldRowComponent;
@@ -12,14 +15,20 @@ describe('FieldRowComponent', () => {
   const plans = signal<any[]>([]);
   const getForField = jasmine.createSpy('getForField');
   const apply = jasmine.createSpy('apply');
+  const saveFieldNow = jasmine.createSpy('saveFieldNow');
 
   beforeEach(async () => {
     plans.set([]);
     getForField.calls.reset();
     apply.calls.reset();
+    saveFieldNow.calls.reset();
+    saveFieldNow.and.resolveTo(true);
     await TestBed.configureTestingModule({
       imports: [FieldRowComponent],
-      providers: [{provide: FertilizerPlansService, useValue: {plans, getForField, apply}}]
+      providers: [
+        {provide: FertilizerPlansService, useValue: {plans, getForField, apply}},
+        {provide: StorageService, useValue: {saveFieldNow, saveField: () => undefined}}
+      ]
     })
     .compileComponents();
 
@@ -60,5 +69,22 @@ describe('FieldRowComponent', () => {
 
     expect(apply).toHaveBeenCalledOnceWith(plan, plan.resultingNutrients);
     expect(field.soilNutrients()).toEqual({nitrogen: 55, phosphorus: 35, potassium: 40});
+  });
+
+  it('ignores a second harvest click while the first nutrient deduction is being saved', async () => {
+    const field = component.field();
+    field.crop.set(new Crop('rice', 'Rice', false, new Duration(19, 12), '', {nitrogen: .1, phosphorus: 0, potassium: 0}));
+    field.soilNutrients.set({nitrogen: 150, phosphorus: 150, potassium: 150});
+    field.isPlanted.set(true);
+    field.harvestTime.set(new Date(Date.now() - 1));
+    fixture.componentRef.setInput('now', Date.now());
+    fixture.detectChanges();
+
+    const firstHarvest = component.onHarvest();
+    const secondHarvest = component.onHarvest();
+    await Promise.all([firstHarvest, secondHarvest]);
+
+    expect(saveFieldNow).toHaveBeenCalledTimes(1);
+    expect(field.soilNutrients()).toEqual({nitrogen: 147.5, phosphorus: 150, potassium: 150});
   });
 });

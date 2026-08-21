@@ -1,23 +1,54 @@
 <section class="saved-shell">
-  <header>
-    <span class="eyebrow">BIBLIOTHÈQUE PARTAGÉE</span>
-    <h2>Mes panneaux</h2>
-    <p>Clique sur une carte pour copier instantanément tout son contenu.</p>
+  <header class="library-heading">
+    <div><span class="eyebrow">BIBLIOTHÈQUE PARTAGÉE</span><h2>Mes panneaux</h2><p>Clique sur une carte pour copier son contenu, ou glisse-la dans un dossier pour l’organiser.</p></div>
+    <button type="button" class="new-folder" (click)="newFolder()"><span class="material-icons">create_new_folder</span>Nouveau dossier</button>
   </header>
 
   @if (savedSigns.loading()) {
     <p class="state">Chargement des panneaux…</p>
-  } @else if (savedSigns.signs().length === 0) {
+  } @else if (savedSigns.signs().length === 0 && savedSigns.folders().length === 0) {
     <div class="empty-state"><span class="material-icons">signpost</span><h3>Aucun panneau sauvegardé</h3><p>Crée ton premier panneau dans le générateur, puis utilise « Sauvegarder ».</p></div>
   } @else {
-    <div class="sign-grid">
-      @for (sign of savedSigns.signs(); track sign.id) {
-        <article class="sign-card" role="button" tabindex="0" (click)="copy(sign)" (keydown.enter)="copy(sign)" (keydown.space)="copy(sign); $event.preventDefault()">
-          <button type="button" class="delete-sign" (click)="remove($event, sign)" aria-label="Supprimer ce panneau">×</button>
-          <div class="sign-preview" [innerHTML]="preview(sign.content)"></div>
-          <footer><span>{{ sign.content.length }} caractères</span><strong>{{ copiedId() === sign.id ? 'Copié !' : 'Cliquer pour copier' }}</strong></footer>
-        </article>
+    <section class="folder-section unfiled" [class.drop-target]="isDropTarget(null)" (dragover)="dragOver($event, null)" (dragleave)="dragLeave($event, null)" (drop)="drop($event, null)">
+      <header class="folder-header"><div class="folder-name"><span class="material-icons">inventory_2</span><div><h3>Sans dossier</h3><small>{{ unfiledSigns().length }} panneau{{ unfiledSigns().length > 1 ? 'x' : '' }}</small></div></div><span class="drop-hint">Déposer ici</span></header>
+      @if (unfiledSigns().length > 0) {
+        <div class="sign-grid">
+          @for (sign of unfiledSigns(); track sign.id) {
+            <ng-container [ngTemplateOutlet]="signCard" [ngTemplateOutletContext]="{$implicit: sign}"></ng-container>
+          }
+        </div>
+      } @else {
+        <p class="folder-empty">Dépose un panneau ici pour le sortir d’un dossier.</p>
       }
-    </div>
+    </section>
+
+    @for (folder of savedSigns.folders(); track folder.id) {
+      <section class="folder-section" [class.collapsed]="folder.collapsed" [class.drop-target]="isDropTarget(folder.id)" (dragover)="dragOver($event, folder.id)" (dragleave)="dragLeave($event, folder.id)" (drop)="drop($event, folder.id)">
+        <header class="folder-header">
+          <button type="button" class="folder-toggle" [attr.aria-expanded]="!folder.collapsed" (click)="toggleFolder(folder)"><span class="material-icons">{{ folder.collapsed ? 'chevron_right' : 'expand_more' }}</span><span class="material-icons folder-icon">folder</span><span class="folder-name"><strong>{{ folder.name }}</strong><small>{{ signsForFolder(folder.id).length }} panneau{{ signsForFolder(folder.id).length > 1 ? 'x' : '' }}</small></span></button>
+          <div class="folder-actions"><span class="drop-hint">Déposer ici</span><button type="button" title="Renommer le dossier" aria-label="Renommer le dossier" (click)="renameFolder($event, folder)"><span class="material-icons">edit</span></button><button type="button" class="delete-folder" title="Supprimer le dossier" aria-label="Supprimer le dossier" (click)="removeFolder($event, folder)"><span class="material-icons">delete_outline</span></button></div>
+        </header>
+        @if (!folder.collapsed) {
+          @if (signsForFolder(folder.id).length > 0) {
+            <div class="sign-grid">
+              @for (sign of signsForFolder(folder.id); track sign.id) {
+                <ng-container [ngTemplateOutlet]="signCard" [ngTemplateOutletContext]="{$implicit: sign}"></ng-container>
+              }
+            </div>
+          } @else {
+            <p class="folder-empty">Dépose un panneau dans ce dossier.</p>
+          }
+        }
+      </section>
+    }
   }
 </section>
+
+<ng-template #signCard let-sign>
+  <article class="sign-card" role="button" tabindex="0" draggable="true" [class.dragging]="draggedId() === sign.id" (click)="copy(sign)" (keydown.enter)="copy(sign)" (keydown.space)="copy(sign); $event.preventDefault()" (dragstart)="dragStart($event, sign)" (dragend)="dragEnd()">
+    <button type="button" class="delete-sign" draggable="false" (click)="remove($event, sign)" aria-label="Supprimer ce panneau">×</button>
+    <div class="sign-preview" [innerHTML]="preview(sign.content)"></div>
+    <footer><span>{{ sign.content.length }} caractères</span><strong>{{ copiedId() === sign.id ? 'Copié !' : 'Cliquer pour copier' }}</strong></footer>
+    <label class="move-select" (click)="$event.stopPropagation()"><span>Déplacer vers</span><select [value]="sign.folderId ?? ''" (click)="$event.stopPropagation()" (change)="moveFromSelect($event, sign)"><option value="">Sans dossier</option>@for (folder of savedSigns.folders(); track folder.id) { <option [value]="folder.id">{{ folder.name }}</option> }</select></label>
+  </article>
+</ng-template>
