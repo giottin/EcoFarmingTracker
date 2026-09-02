@@ -3,6 +3,15 @@ import {FERTILIZER_DEFINITIONS} from '../fertilizer-plans/fertilizer-data';
 
 /** One farming plot and one land claim always cover a 5 × 5 area. */
 export const PLANTS_PER_CLAIM = 25;
+/**
+ * ECO exposes ResourceConstraints but not the exact AccumulatingPuller
+ * withdrawal formula. Our 5 × 5 claim and one nutrient-layer entry have the
+ * same footprint, so the tracker applies one claim-level estimate per cycle.
+ * Do not multiply this value by PLANTS_PER_CLAIM: MaxResourceContent is not
+ * documented as a per-plant soil-sampler withdrawal. Adjust this single value
+ * after comparing future in-game measurements, if ECO publishes that formula.
+ */
+export const CLAIM_NUTRIENT_CYCLE_ESTIMATE_MULTIPLIER = 1;
 /** Soil Sampler readings are normally percentages, but atypical readings must
  * remain visible so a player can spot and correct them. */
 export const MAX_TRACKED_NUTRIENT = 999;
@@ -69,18 +78,18 @@ export function hasTrackedNutrients(nutrients: Nutrients | undefined): nutrients
   return !!nutrients && NUTRIENT_KEYS.every(key => Number.isFinite(nutrients[key]));
 }
 
-export function cropNutrientConsumptionPerPlant(crop: Crop): Nutrients {
-  return crop.nutrientConsumption;
-}
-
-/** The average soil value falls by exactly one 5 × 5 claim, regardless of field size. */
-export function cropNutrientConsumptionPerClaim(crop: Crop): Nutrients {
-  return scale(cropNutrientConsumptionPerPlant(crop), PLANTS_PER_CLAIM);
+/**
+ * Estimated N/P/K variation for one completed crop cycle on one claim.
+ * MaxResourceContent is used only as a crop-specific, claim-level estimate;
+ * HalfSpeedConcentration remains reserved for yield/alert thresholds.
+ */
+export function calculateNutrientChangeForCrop(crop: Crop): Nutrients {
+  return scale(crop.nutrientConstraints.maxResourceContent, CLAIM_NUTRIENT_CYCLE_ESTIMATE_MULTIPLIER);
 }
 
 export function calculateFieldNutrientsAfterHarvest(current: Nutrients | undefined, crop: Crop): Nutrients | undefined {
   if (!hasTrackedNutrients(current)) return undefined;
-  return subtract(current, cropNutrientConsumptionPerClaim(crop));
+  return subtract(current, calculateNutrientChangeForCrop(crop));
 }
 
 /**
@@ -114,7 +123,10 @@ export function calculateFieldNutrientsAfterFertilization(
 
 export function getNutrientWarnings(current: Nutrients | undefined, crop: Crop): NutrientKey[] {
   if (!hasTrackedNutrients(current)) return [];
-  const thresholds = CROP_NUTRIENT_THRESHOLDS[crop.id()] ?? scale(cropNutrientConsumptionPerPlant(crop), 100);
+  // Existing crop alerts stay independently calibrated. For a future crop
+  // without an explicit threshold, use its HalfSpeedConcentration rather than
+  // confusing its estimated nutrient withdrawal with a yield-limit threshold.
+  const thresholds = CROP_NUTRIENT_THRESHOLDS[crop.id()] ?? scale(crop.nutrientConstraints.halfSpeedConcentration, 100);
   return NUTRIENT_KEYS.filter(key => thresholds[key] > 0 && current[key] <= thresholds[key]);
 }
 

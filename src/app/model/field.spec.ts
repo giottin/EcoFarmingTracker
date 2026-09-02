@@ -55,20 +55,26 @@ describe('Field harvest behavior', () => {
   });
 
   it('deducts nutrients once per harvest while keeping a persistent crop planted', () => {
-    const cotton = new Crop('cotton', 'Cotton', true, fullGrowth, '', {nitrogen: .1, phosphorus: .15, potassium: .2});
+    const cotton = new Crop('cotton', 'Cotton', true, fullGrowth, '', {
+      halfSpeedConcentration: {nitrogen: .1, phosphorus: .1, potassium: .2},
+      maxResourceContent: {nitrogen: .1, phosphorus: .15, potassium: .2}
+    });
     const field = new Field(1, cotton);
     field.soilNutrients.set({nitrogen: 72, phosphorus: 58, potassium: 81});
     field.onPlant();
 
     field.onHarvest();
 
-    expect(field.soilNutrients()).toEqual({nitrogen: 69.5, phosphorus: 54.25, potassium: 76});
+    expect(field.soilNutrients()).toEqual({nitrogen: 71.9, phosphorus: 57.85, potassium: 80.8});
     expect(field.isPlanted()).toBeTrue();
     expect(field.harvestTime()?.toISOString()).toBe('2026-08-14T02:24:00.000Z');
   });
 
   it('deducts the persistent huckleberry consumption once during each completed regrowth cycle', () => {
-    const huckleberries = new Crop('huckleberries', 'Huckleberries', true, fullGrowth, '', {nitrogen: .1, phosphorus: .15, potassium: .2});
+    const huckleberries = new Crop('huckleberries', 'Huckleberries', true, fullGrowth, '', {
+      halfSpeedConcentration: {nitrogen: .1, phosphorus: .1, potassium: .2},
+      maxResourceContent: {nitrogen: .1, phosphorus: .15, potassium: .2}
+    });
     const field = new Field(1, huckleberries);
     field.soilNutrients.set({nitrogen: 150, phosphorus: 150, potassium: 150});
     field.onPlant();
@@ -78,7 +84,9 @@ describe('Field harvest behavior', () => {
     jasmine.clock().tick((14 * 60 + 24) * 60 * 1000);
     field.onHarvest();
 
-    expect(field.soilNutrients()).toEqual({nitrogen: 145, phosphorus: 142.5, potassium: 140});
+    expect(field.soilNutrients()?.nitrogen).toBeCloseTo(149.8, 8);
+    expect(field.soilNutrients()?.phosphorus).toBeCloseTo(149.7, 8);
+    expect(field.soilNutrients()?.potassium).toBeCloseTo(149.6, 8);
     expect(field.isPlanted()).toBeTrue();
   });
 });

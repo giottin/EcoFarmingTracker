@@ -5,39 +5,59 @@ import {
   calculateFertilizerContributionPerClaim,
   calculateFieldNutrientsAfterFertilization,
   calculateFieldNutrientsAfterHarvest,
-  cropNutrientConsumptionPerClaim,
+  calculateNutrientChangeForCrop,
   getNutrientWarnings,
   PLANTS_PER_CLAIM
 } from './soil-nutrients';
 
 describe('soil nutrient rules', () => {
-  const crop = new Crop('test', 'Test', false, new Duration(1, 0), '', {nitrogen: .2, phosphorus: .1, potassium: .3});
+  const crop = new Crop('test', 'Test', false, new Duration(1, 0), '', {
+    halfSpeedConcentration: {nitrogen: .1, phosphorus: .1, potassium: .1},
+    maxResourceContent: {nitrogen: .2, phosphorus: .1, potassium: .3}
+  });
 
-  it('uses exactly 25 plants for one claim', () => {
+  it('keeps the known 25-plant claim footprint without multiplying an unverified per-plant withdrawal', () => {
     expect(PLANTS_PER_CLAIM).toBe(25);
-    expect(cropNutrientConsumptionPerClaim(crop)).toEqual({nitrogen: 5, phosphorus: 2.5, potassium: 7.5});
+    expect(calculateNutrientChangeForCrop(crop)).toEqual({nitrogen: .2, phosphorus: .1, potassium: .3});
   });
 
   it('subtracts one claim only, regardless of the total field size', () => {
     expect(calculateFieldNutrientsAfterHarvest({nitrogen: 72, phosphorus: 58, potassium: 81}, crop))
-      .toEqual({nitrogen: 67, phosphorus: 55.5, potassium: 73.5});
+      .toEqual({nitrogen: 71.8, phosphorus: 57.9, potassium: 80.7});
   });
 
   it('keeps an atypical recorded soil reading above 100 percent visible after harvest', () => {
     expect(calculateFieldNutrientsAfterHarvest({nitrogen: 150, phosphorus: 58, potassium: 81}, crop))
-      .toEqual({nitrogen: 145, phosphorus: 55.5, potassium: 73.5});
+      .toEqual({nitrogen: 149.8, phosphorus: 57.9, potassium: 80.7});
   });
 
   for (const [cropId, expected] of [
-    ['rice', {nitrogen: 147.5, phosphorus: 150, potassium: 150}],
-    ['beets', {nitrogen: 145, phosphorus: 142.5, potassium: 140}],
-    ['corn', {nitrogen: 140, phosphorus: 140, potassium: 147.5}],
-    ['wheat', {nitrogen: 142.5, phosphorus: 147.5, potassium: 147.5}],
-    ['huckleberries', {nitrogen: 147.5, phosphorus: 146.25, potassium: 145}]
+    ['rice', {nitrogen: 149.9, phosphorus: 150, potassium: 150}],
+    ['beets', {nitrogen: 149.8, phosphorus: 149.7, potassium: 149.6}],
+    ['corn', {nitrogen: 149.6, phosphorus: 149.6, potassium: 149.9}],
+    ['wheat', {nitrogen: 149.7, phosphorus: 149.9, potassium: 149.9}],
+    ['huckleberries', {nitrogen: 149.9, phosphorus: 149.85, potassium: 149.8}]
   ] as const) {
-    it(`uses ${cropId}'s own N/P/K consumption for one 25-plant claim`, () => {
+    it(`uses ${cropId}'s own claim-level N/P/K estimate for one cycle`, () => {
       const currentCrop = ALL_CROPS.find(candidate => candidate.id() === cropId)!;
       expect(calculateFieldNutrientsAfterHarvest({nitrogen: 150, phosphorus: 150, potassium: 150}, currentCrop)).toEqual(expected);
+    });
+  }
+
+  for (const [cropId, expected] of [
+    ['rice', {nitrogen: 149.6, phosphorus: 150, potassium: 150}],
+    ['beets', {nitrogen: 149.2, phosphorus: 148.8, potassium: 148.4}],
+    ['corn', {nitrogen: 148.4, phosphorus: 148.4, potassium: 149.6}],
+    ['wheat', {nitrogen: 148.8, phosphorus: 149.6, potassium: 149.6}],
+    ['huckleberries', {nitrogen: 149.6, phosphorus: 149.4, potassium: 149.2}]
+  ] as const) {
+    it(`keeps ${cropId}'s four completed cycles stable and crop-specific`, () => {
+      const currentCrop = ALL_CROPS.find(candidate => candidate.id() === cropId)!;
+      let nutrients = {nitrogen: 150, phosphorus: 150, potassium: 150};
+      for (let cycle = 0; cycle < 4; cycle++) nutrients = calculateFieldNutrientsAfterHarvest(nutrients, currentCrop)!;
+      expect(nutrients.nitrogen).toBeCloseTo(expected.nitrogen, 8);
+      expect(nutrients.phosphorus).toBeCloseTo(expected.phosphorus, 8);
+      expect(nutrients.potassium).toBeCloseTo(expected.potassium, 8);
     });
   }
 

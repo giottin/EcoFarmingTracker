@@ -73,7 +73,10 @@ describe('FieldRowComponent', () => {
 
   it('ignores a second harvest click while the first nutrient deduction is being saved', async () => {
     const field = component.field();
-    field.crop.set(new Crop('rice', 'Rice', false, new Duration(19, 12), '', {nitrogen: .1, phosphorus: 0, potassium: 0}));
+    field.crop.set(new Crop('rice', 'Rice', false, new Duration(19, 12), '', {
+      halfSpeedConcentration: {nitrogen: .1, phosphorus: 0, potassium: 0},
+      maxResourceContent: {nitrogen: .1, phosphorus: 0, potassium: 0}
+    }));
     field.soilNutrients.set({nitrogen: 150, phosphorus: 150, potassium: 150});
     field.isPlanted.set(true);
     field.harvestTime.set(new Date(Date.now() - 1));
@@ -85,6 +88,6 @@ describe('FieldRowComponent', () => {
     await Promise.all([firstHarvest, secondHarvest]);
 
     expect(saveFieldNow).toHaveBeenCalledTimes(1);
-    expect(field.soilNutrients()).toEqual({nitrogen: 147.5, phosphorus: 150, potassium: 150});
+    expect(field.soilNutrients()).toEqual({nitrogen: 149.9, phosphorus: 150, potassium: 150});
   });
 });
